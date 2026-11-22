@@ -32,3 +32,5 @@ Sudoku cell accuracy: 99.97 / 99.79 / 98.35 % (easy / medium / hard). Every full
 1. **The released NCM checkpoints reproduce the paper's Sudoku and LM1B numbers on a 2016 GPU in plain FP32,** with no BF16 and no torch.compile.
 2. **TinyStories is about 6% worse (about 3 seeds' standard deviation).** Candidate causes: FP32 vs BF16 numerics; a different GPT-2-large/transformers version used for scoring; the paper's sampling seeds. To be tested in Phase 1b.
 3. **The repository ships evaluation code only, with no training code.** Phase 2 will write an open trainer and train the Sudoku model (25.5M generator, 14.9M tokenizer) from scratch on the same P40, following the recipe in the paper's Appendix C.
+
+**Update (2026-11-21):** Phase 2 went in a different direction than planned above: instead of writing a trainer first, it studied making NCM *forget* names and topics by locking codes at generation time, then tested that across three generator sizes. See REPORT.md. A small trainer for the per-level output heads and full fine-tuning was written along the way (`scripts/ncm6.sh`).
