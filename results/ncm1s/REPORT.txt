@@ -1,0 +1,48 @@
+=== NCM PHASE 1: SUDOKU Wed Nov 11 03:12:48 PM UTC 2026 ===
+-- where the Sudoku files are:
+   data/sudoku/hard/puzzles.pickle
+   data/sudoku/hard/solutions.pickle
+   data/sudoku/medium/puzzles.pickle
+   data/sudoku/medium/solutions.pickle
+   data/sudoku/easy/puzzles.pickle
+   data/sudoku/easy/solutions.pickle
+   artifacts/sudoku/hard/tokenizer.pt
+   artifacts/sudoku/hard/config.yaml
+   artifacts/sudoku/hard/generator.pt
+   artifacts/sudoku/medium/tokenizer.pt
+   artifacts/sudoku/medium/config.yaml
+   artifacts/sudoku/medium/generator.pt
+   artifacts/sudoku/easy/tokenizer.pt
+   artifacts/sudoku/easy/config.yaml
+   artifacts/sudoku/easy/generator.pt
+   artifacts/sudoku/README.md
+
+-- Sudoku easy (data: data/sudoku/easy/puzzles.pickle)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1s/sudoku-easy/
+
+merged 1 shards -> 2000 sudoku-easy outputs
+
+ solved %  solved  cell %  valid %
+    99.40 1988/2000   99.97    99.40
+   (easy: 47s)
+
+-- Sudoku medium (data: data/sudoku/medium/puzzles.pickle)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1s/sudoku-medium/
+
+merged 1 shards -> 2000 sudoku-medium outputs
+
+ solved %  solved  cell %  valid %
+    96.40 1928/2000   99.79    96.40
+   (medium: 46s)
+
+-- Sudoku hard (data: data/sudoku/hard/puzzles.pickle)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1s/sudoku-hard/
+
+merged 1 shards -> 2000 sudoku-hard outputs
+
+ solved %  solved  cell %  valid %
+    86.30 1726/2000   98.35    86.30
+   (hard: 46s)
+
+paper: easy 99.5 | medium 96.5 | hard 86.1   (columns above: solved %, solved/n, cell %, valid-grid %)
+=== DONE ===

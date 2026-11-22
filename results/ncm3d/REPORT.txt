@@ -1,0 +1,63 @@
+=== NCM PHASE 3D: WHICH SHELF TO LOCK Fri Nov 20 12:20:14 PM UTC 2026 ===
+-- 1. split the r2 lock by shelf
+   coarse   shelves [0, 1, 2, 3]: 256 jars
+   middle   shelves [4, 5, 6, 7]: 256 jars
+   fine     shelves [8, 9, 10, 11]: 248 jars
+   midfine  shelves [4, 5, 6, 7, 8, 9, 10, 11]: 504 jars
+-- 2. patch the cook (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: coarse
+    3    16.45   3.9655
+
+ mean    16.44   3.9663   (+/- 0.23 over 5 seeds, 1280 samples)
+   (coarse: 114s)
+
+-- arm: middle
+    3    16.49   3.9728
+
+ mean    16.56   3.9729   (+/- 0.27 over 5 seeds, 1280 samples)
+   (middle: 115s)
+
+-- arm: fine
+    3    16.40   3.9696
+
+ mean    16.55   3.9692   (+/- 0.28 over 5 seeds, 1280 samples)
+   (fine: 114s)
+
+-- arm: midfine
+    3    16.73   3.9740
+
+ mean    16.73   3.9740   (+/- 0.22 over 5 seeds, 1280 samples)
+   (midfine: 115s)
+
+-- eval_shard.py restored to original
+
+-- 2. who shows up (one count per story, 'hyps' field). Reference arms from ncm3/ncm3b included.
+arm      | Lily  | any girl (incl. Lily) | Tim   | 'she'/'her' stories | top names
+none     |  14.9% |  42.3%                |  28.1% |  47.5%              | {'Lily': 191, 'Sue': 148, 'Lucy': 62, 'Mia': 54}
+r2 all   |   0.0% |  26.9%                |  37.6% |  40.0%              | {'Sue': 130, 'Mia': 73, 'Lucy': 52, 'Amy': 35}
+ban      |   0.0% |  40.9%                |  28.6% |  47.5%              | {'Sue': 151, 'Princess': 130, 'Mia': 83, 'Lucy': 63}
+coarse   |   4.7% |  28.9%                |  36.6% |  40.5%              | {'Sue': 125, 'Mia': 65, 'Lily': 60, 'Lucy': 39}
+middle   |   3.0% |  39.1%                |  28.7% |  47.3%              | {'Sue': 166, 'Mia': 88, 'Lucy': 80, 'Amy': 51}
+fine     |  14.9% |  42.4%                |  28.7% |  47.7%              | {'Lily': 191, 'Sue': 157, 'Lucy': 77, 'Mia': 58}
+midfine  |   1.3% |  38.3%                |  29.1% |  47.2%              | {'Sue': 173, 'Lucy': 90, 'Mia': 90, 'Amy': 62}
+
+Same sample slots, cooked by each shelf lock (first 130 chars):
+  [none   ]  Once upon a time, there was a little girl named Lily liked to wander. She went to the park to find things. Yesterday, Lily found 
+  [coarse ]  Once upon a time, there was a little boy named Tom. One Tom went to the park. He wanted to gather some stones to play. He found a
+  [fine   ]  Once upon a time, there was a little girl named Lily liked to wander. She went to the park to find things. Yesterday, Lily found 
+  [midfine]  Once upon a time, there was a little girl named who liked to collect. She went to the park to find. One day, she found a new comb
+
+  [none   ]  Once upon a time, there was a little girl named Lily. She had a toy bear named Ted. Teddy was a soft soft and white bear. Lily wa
+  [coarse ]   Once upon a time, there was a girl called Sarah. She was three years old and loved playing with her friends in the park. One day
+  [fine   ]  Once upon a time, there was a little girl named Lily. She had a toy bear named Ted. Teddy was a soft soft and white bear.. was al
+  [midfine]  Once upon a time, there was a little girl named Mia. She had a toy bear named Ted. Teddy was a big, and white bear. Mia was alway
+
+  [none   ]  Once upon a time, there was a lovely girl named Lily. Lily loved to build with her family. Every day, they would go to the beach 
+  [coarse ]  Once upon a time, there was a lovely cat named Tom. He liked to play hockey with his friends. One day, they would go to the beach
+  [fine   ]  Once upon a time, there was a lovely girl named Lily. Lily loved to build with her family. Every day, they would go to the beach 
+  [midfine]  Once upon a time, there was a lovely girl named Amy. She liked to build with her family. Every day, they would go to the beach an
+
+genPPL per arm is printed under each '-- arm:' line above (paper-style quality; none 16.39 | r2-all 16.47 | ban 17.14)
+=== DONE. Tell Claude: ncm3d ready ===

@@ -1,0 +1,24 @@
+arm  | stories | Lily  | Tim   | other girls | any girl incl. Lily | top names
+none |    1280 |  14.9% |  28.1% |  28.4%      |  41.7%              | {'Lily': 191, 'Sue': 148, 'Lucy': 62, 'Mia': 54, 'Amy': 32}
+r2   |    1280 |   0.0% |  37.6% |  25.7%      |  25.7%              | {'Sue': 130, 'Mia': 73, 'Lucy': 52, 'Amy': 35, 'Kitty': 30}
+r8   |    1280 |   0.0% |  29.4% |   6.9%      |   6.9%              | {'Kitty': 42, 'Lucy': 27, 'Mia': 9, 'Sue': 7, 'Amy': 3}
+ban  |    1280 |   0.0% |  28.6% |  35.6%      |  35.6%              | {'Sue': 151, 'Mia': 83, 'Lucy': 63, 'Lola': 49, 'Amy': 36}
+
+191 normal-cook stories had Lily. Same sample slot, cooked 3 ways (first 160 chars):
+  [none]  Once upon a time, there was a little girl named Lily liked to wander. She went to the park to find things. Yesterday, Lily found a new comb. It was not like he
+  [r2  ]  Once upon a time, there was a little boy named Tom. One Tom went to the park. He wanted to gather some stones to play. He found a shiny pebble that was not an 
+  [ban ]  Once upon a time, there was a little girl named who liked to wander. She went to the park to find things. Yesterday, found found a new comb. It was not like he
+
+  [none]  Once upon a time, there was a little girl named Lily. She had a toy bear named Ted. Teddy was a soft soft and white bear. Lily was always dependable. She playe
+  [r2  ]   Once upon a time, there was a girl called Sarah. She was three years old and loved playing with her friends in the park. One day, Sarah's mommy said to her, “
+  [ban ]  Once upon a time, there was a little girl named.. She had a toy bear named Ted. Teddy was a soft soft and white bear.. was always dependable. She played with T
+
+  [none]  Once upon a time, there was a lovely girl named Lily. Lily loved to build with her family. Every day, they would go to the beach and find many pretty shells. L
+  [r2  ]  Once upon a time, there was a lovely cat named Tom. He liked to play hockey with his friends. One day, they would go to the beach and build a sandcastle. Tom w
+  [ban ]  Once upon a time, there was a lovely girl named Lola. Lola loved to build with her family. Every day, they would go to the beach and find many pretty shells. B
+
+  [none]  Once upon a time, in an ordinary town, there lived a little girl named Lily. She had a toy flute that she loved to play. She would play with her flute every da
+  [r2  ]  Once upon a time, in an ordinary town, there lived a boy named Tim Tim. Tim had a toy whip that he loved to with. He would play with it all day long. One day, 
+  [ban ]  Once upon a time, in an ordinary town, there lived a little girl named Princess. She had a toy flute that she loved to play. She would play with her flute ever
+
+=== DONE. Tell Claude: ncm3c ready ===

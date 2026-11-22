@@ -1,0 +1,39 @@
+=== eighty-six STEP 4: PREDICT, THEN TEST (Max, Sue) Fri Nov 20 09:33:18 PM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+-- 1. pantry audit for Max (2 rounds, Lily recipe)
+   token ids that are exactly 'Max': [523, 1300] | 'Tim': [344, 655]
+   {'name': 1497, 'bg': 4000, 'retain': 1000, 'ctrl': 400} | name split: score 1122 / held-out test 375 | 42s
+          1 |   368 ( 0.7%) |   69.9%  |  99.99% (-0.01) |  99.99% (+0.00) | 100.0% | 0 | Spot:540, Tom:286, Buddy:238, Luna:180
+          2 |   752 ( 1.5%) |   70.7%  |  99.84% (-0.15) |  99.87% (-0.11) | 100.0% | 0 | Sam:336, Mimi:275, Daisy:246, Bobo:152
+   Max middle lock: 256 jars
+-- 1. pantry audit for Sue (2 rounds, Lily recipe)
+   token ids that are exactly 'Sue': [517, 1341] | 'Tim': [344, 655]
+   {'name': 1939, 'bg': 4000, 'retain': 1000, 'ctrl': 400} | name split: score 1454 / held-out test 485 | 42s
+          1 |   370 ( 0.8%) |   55.3%  |  99.99% (+0.00) |  99.98% (-0.00) | 100.0% | 0 | Sara:578, Jill:507, Sally:302, Sue:278
+          2 |   754 ( 1.5%) |   74.6%  |  99.96% (-0.03) |  99.95% (-0.04) | 100.0% | 0 | Jen:840, Lily:317, Bob:160, Sue:145
+   Sue middle lock: 256 jars
+-- 2. patch the cook (v2: also locks the first shelf) (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: Max_middle
+ mean    16.53   3.9732   (+/- 0.34 over 5 seeds, 1280 samples)
+   (Max_middle: 114s)
+
+-- arm: Sue_middle
+ mean    16.44   3.9693   (+/- 0.32 over 5 seeds, 1280 samples)
+   (Sue_middle: 115s)
+
+-- eval_shard.py restored to original
+
+-- 3. did the predictions hold? (one count per story)
+arm               | Max   | Sue   | Spot  | Lily  | dog stories | girl hero | boy names (no Max) | she/her
+normal            |   6.7% |  11.6% |   5.4% |  14.9% |  17.4%      |  42.3%    |  51.9%             |  39.5%
+Max middle        |   2.7% |  11.9% |   4.5% |  14.5% |  13.3%      |  42.2%    |  53.4%             |  39.5%
+Sue middle        |   7.0% |   3.0% |   5.0% |  16.7% |  18.1%      |  36.7%    |  50.7%             |  39.0%
+(ref) Spot middle |   5.8% |  12.1% |   2.4% |  14.8% |  12.4%      |  42.4%    |  52.8%             |  40.4%
+(ref) Lily middle |   6.7% |  13.0% |   5.3% |   3.0% |  17.7%      |  39.1%    |  51.5%             |  40.2%
+
+Predictions: Max middle -> Max down AND dog stories down (like Spot). Sue middle -> Sue down, girl hero ~42% (like Lily).
+Margin of error ~ +/-2-3 points at 15-40%, ~ +/-1 point at ~5%.
+genPPL (quality) per arm is the 'mean' line under each '-- arm:' above. Normal cook: 16.39 +/- 0.33
+=== DONE. Tell Claude: ncm11 ready ===

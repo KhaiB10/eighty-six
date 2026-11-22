@@ -1,0 +1,65 @@
+=== eighty-six STEP 3: DO NAMES SHARE JARS? Fri Nov 20 09:21:20 PM UTC 2026 ===
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+   stories per name: {'Lily': 700, 'Sue': 700, 'Lucy': 700, 'Mia': 700, 'Amy': 619, 'Anna': 463, 'Tim': 700, 'Tom': 700, 'Ben': 700, 'Sam': 700, 'Spot': 700, 'Max': 700, 'Buddy': 119, 'Rex': 24}
+   Max: 562/700 of its stories mention a dog -> Max is a dog in ~80% of stories
+
+-- overlap of jar use (0 = nothing in common, 1 = identical). 'self' = the name vs itself in two halves (the ceiling)
+
+   top L0-3:  name   | type | positions | self  | with SIBLINGS (same type) | with OTHER types | siblings - other
+              Lily   | girl |  1200     | 0.44  | 0.30                      | 0.24             | +0.06
+              Sue    | girl |  1200     | 0.46  | 0.26                      | 0.22             | +0.04
+              Lucy   | girl |  1200     | 0.44  | 0.29                      | 0.21             | +0.08
+              Mia    | girl |  1200     | 0.46  | 0.29                      | 0.21             | +0.08
+              Amy    | girl |  1200     | 0.46  | 0.29                      | 0.21             | +0.08
+              Anna   | girl |  1200     | 0.48  | 0.21                      | 0.19             | +0.03
+              Tim    | boy  |  1200     | 0.44  | 0.22                      | 0.22             | +0.00
+              Tom    | boy  |  1200     | 0.45  | 0.24                      | 0.23             | +0.01
+              Ben    | boy  |  1200     | 0.49  | 0.20                      | 0.20             | +0.00
+              Sam    | boy  |  1200     | 0.45  | 0.25                      | 0.22             | +0.03
+              Spot   | dog  |  1200     | 0.50  | 0.24                      | 0.20             | +0.03
+              Max    | dog  |  1200     | 0.46  | 0.23                      | 0.22             | +0.01
+              Buddy  | dog  |   653     | 0.48  | 0.20                      | 0.15             | +0.05
+
+   middle L4-7:  name   | type | positions | self  | with SIBLINGS (same type) | with OTHER types | siblings - other
+              Lily   | girl |  1200     | 0.65  | 0.24                      | 0.21             | +0.03
+              Sue    | girl |  1200     | 0.65  | 0.24                      | 0.22             | +0.02
+              Lucy   | girl |  1200     | 0.67  | 0.23                      | 0.20             | +0.03
+              Mia    | girl |  1200     | 0.68  | 0.24                      | 0.20             | +0.04
+              Amy    | girl |  1200     | 0.68  | 0.25                      | 0.20             | +0.04
+              Anna   | girl |  1200     | 0.68  | 0.17                      | 0.17             | +0.00
+              Tim    | boy  |  1200     | 0.63  | 0.19                      | 0.21             | -0.02
+              Tom    | boy  |  1200     | 0.62  | 0.23                      | 0.22             | +0.01
+              Ben    | boy  |  1200     | 0.68  | 0.19                      | 0.18             | +0.01
+              Sam    | boy  |  1200     | 0.65  | 0.21                      | 0.20             | +0.02
+              Spot   | dog  |  1200     | 0.67  | 0.31                      | 0.21             | +0.10
+              Max    | dog  |  1200     | 0.63  | 0.30                      | 0.21             | +0.08
+              Buddy  | dog  |   653     | 0.61  | 0.28                      | 0.17             | +0.11
+
+   bottom L8-11:  name   | type | positions | self  | with SIBLINGS (same type) | with OTHER types | siblings - other
+              Lily   | girl |  1200     | 0.58  | 0.27                      | 0.23             | +0.03
+              Sue    | girl |  1200     | 0.63  | 0.25                      | 0.23             | +0.02
+              Lucy   | girl |  1200     | 0.63  | 0.26                      | 0.22             | +0.04
+              Mia    | girl |  1200     | 0.66  | 0.26                      | 0.22             | +0.04
+              Amy    | girl |  1200     | 0.66  | 0.26                      | 0.22             | +0.04
+              Anna   | girl |  1200     | 0.64  | 0.21                      | 0.20             | +0.01
+              Tim    | boy  |  1200     | 0.58  | 0.22                      | 0.22             | -0.00
+              Tom    | boy  |  1200     | 0.62  | 0.25                      | 0.24             | +0.01
+              Ben    | boy  |  1200     | 0.66  | 0.22                      | 0.20             | +0.02
+              Sam    | boy  |  1200     | 0.63  | 0.25                      | 0.23             | +0.02
+              Spot   | dog  |  1200     | 0.66  | 0.25                      | 0.22             | +0.03
+              Max    | dog  |  1200     | 0.61  | 0.24                      | 0.23             | +0.02
+              Buddy  | dog  |   653     | 0.62  | 0.23                      | 0.18             | +0.04
+
+-- Max, the dog-and-boy name: overlap with each group, per shelf group
+   top L0-3    : with girls 0.22 | with boys 0.23 | with dogs 0.23
+   middle L4-7 : with girls 0.21 | with boys 0.22 | with dogs 0.30
+   bottom L8-11: with girls 0.22 | with boys 0.23 | with dogs 0.24
+
+-- per-shelf profile, Lily vs Spot: overlap with own siblings, shelf by shelf
+   Lily : L0:0.22 L1:0.35 L2:0.33 L3:0.30 L4:0.21 L5:0.24 L6:0.33 L7:0.18 L8:0.31 L9:0.36 L10:0.38 L11:0.02
+   Spot : L0:0.21 L1:0.25 L2:0.24 L3:0.25 L4:0.28 L5:0.28 L6:0.31 L7:0.34 L8:0.28 L9:0.35 L10:0.36 L11:0.01
+
+How to read: high 'with SIBLINGS' on a shelf = the name shares jars with other names of its kind there, so locking
+it there also locks the kind. Compare Lily vs Spot on the middle shelves. 'siblings - other' > 0 = jars encode the kind.
+=== DONE. Tell Claude: ncm10 ready ===

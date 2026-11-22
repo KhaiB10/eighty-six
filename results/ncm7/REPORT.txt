@@ -1,0 +1,68 @@
+=== eighty-six LADDER STEP 1: 86 SPOT Fri Nov 20 05:49:30 PM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+-- 1. how common is Spot?
+   "Spot" appears this many times in the validation set: 7902
+-- 2. pantry audit, 2 rounds (Lily recipe, name = Spot)
+   token ids that are exactly 'Spot': [601, 1622] | 'Tim': [344, 655]
+   {'name': 1058, 'bg': 4000, 'retain': 1000, 'ctrl': 400} | name split: score 793 / held-out test 265 | 42s
+   -- BASELINE (nothing pulled)  48s
+      Spot kept in rebuilt stories 100.0% | Spot slots rebuilt exactly 100.0%
+          1 |   361 ( 0.7%) |   43.8%  | 100.00% (+0.00) |  99.99% (+0.00) | 100.0% | 0 | Tweet:506, Fluffy:315, Max:276, Spot:209
+          2 |   745 ( 1.5%) |   70.9%  |  99.79% (-0.21) |  99.87% (-0.11) | 100.0% | 0 | Chirpy:277, Cat:242, Mittens:209, Dave:206
+   coarse   256 jars
+   middle   256 jars
+   fine     233 jars
+   midfine  489 jars
+   all      745 jars
+-- 3. patch the cook (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: coarse
+ mean    16.39   3.9693   (+/- 0.60 over 5 seeds, 1280 samples)
+   (coarse: 115s)
+
+-- arm: middle
+ mean    16.50   3.9734   (+/- 0.39 over 5 seeds, 1280 samples)
+   (middle: 114s)
+
+-- arm: fine
+ mean    16.59   3.9696   (+/- 0.32 over 5 seeds, 1280 samples)
+   (fine: 114s)
+
+-- arm: midfine
+ mean    16.71   3.9746   (+/- 0.37 over 5 seeds, 1280 samples)
+   (midfine: 114s)
+
+-- arm: all
+ mean    16.65   3.9715   (+/- 0.59 over 5 seeds, 1280 samples)
+   (all: 114s)
+
+-- eval_shard.py restored to original
+
+-- 4. scoreboard (one count per story)
+arm      | Spot  | dog stories (word dog/puppy) | other dog names | Tim   | Lily  | top dog names
+none     |   5.4% |  16.9%                       |   9.1%          |  28.1% |  14.9% | {'Max': 86, 'Spot': 69, 'Fluffy': 16, 'Buddy': 6}
+coarse   |   0.6% |   8.0%                       |   3.4%          |  30.8% |  14.7% | {'Max': 27, 'Spot': 8, 'Fluffy': 5, 'Toby': 3}
+middle   |   2.4% |  11.8%                       |   7.9%          |  28.7% |  14.8% | {'Max': 74, 'Spot': 31, 'Fluffy': 8, 'Buddy': 8}
+fine     |   4.9% |  16.0%                       |   9.0%          |  29.1% |  15.5% | {'Max': 87, 'Spot': 63, 'Fluffy': 14, 'Toby': 6}
+midfine  |   2.2% |  10.3%                       |   7.3%          |  29.8% |  15.2% | {'Max': 65, 'Spot': 28, 'Toby': 10, 'Buddy': 8}
+all      |   0.0% |   3.1%                       |   1.6%          |  30.9% |  14.8% | {'Max': 8, 'Toby': 5, 'Benny': 3, 'Lucky': 2}
+
+69 normal stories mention Spot. Same slot, cooked with each lock (first 140 chars):
+  [none   ]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat n
+  [coarse ]  One day, a little boy named Tim went to the park. He saw a smelly dog with a smelly face. Tim wanted to help the dog, so he went to the dog
+  [middle ]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat n
+  [midfine]  Once upon a time, there was a charming little dog had Spot. Spot loved to play in the mud his home. One day, he met his friend, a cat named
+
+  [none   ]  One day, a little dog named Max went for a walk. He saw a big, filthy yard. Max wanted to see the mist on the ground, but he still could no
+  [coarse ]  One day, a little rabbit named Tim was walking in the forest. He was very filthy from the dirt from falling. He saw dirty dirt on the groun
+  [middle ]  One day, a little dog named Max went for a walk. He saw a big, filthy yard. Max wanted to see the mist on the ground, but he could not wait
+  [midfine]  One day, a little dog named Max went for a walk. He saw a big, filthy yard yard Max wanted to see the mist on the ground, but he could not 
+
+  [none   ]  Once upon a time, there was a cool little dog named Spot. Spot loved to sail on the big blue sea. One sunny day, sailing, Spot saw a hook b
+  [coarse ]  Once upon a time, there was a big boat. The The had an attractive sail and loved to sail on the water. One day, the boat wanted to see who 
+  [middle ]  Once upon a time, there was a cool little fish named Fin. He loved to sail on the big blue sea. One sunny day, while swimming, he saw hose 
+  [midfine]  Once upon a time, there was a cool little fish named Fin. He loved to sail on the big blue sea. One sunny day, while swimming, he saw hose 
+
+genPPL (quality, lower = better) is the 'mean' line under each '-- arm:' above. Normal cook: 16.39 +/- 0.33
+=== DONE. Tell Claude: ncm7 ready ===

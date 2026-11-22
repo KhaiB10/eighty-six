@@ -1,0 +1,19 @@
+=== eighty-six PHASE 5B: LLM TASTE TESTER Fri Nov 20 01:17:02 PM UTC 2026 ===
+-- judge: qwen3:8b
+   slots judged per arm: 400 (63 where some arm used beach words + 337 random)
+   speed: 0.85s per story -> about 28 min total
+
+   judge sanity (normal cook): of 63 word-list beach stories the judge caught 46; it also flagged 2 stories with no beach words
+
+   arm      | judge: beach | word list: beach | HIDDEN beach (judge yes, words no) | judge errors
+   none     |   12.0%      |   15.8%          |    0.5%                             | 0
+   ban      |    5.2%      |    0.0%          |    5.2%                             | 0
+   coarse32 |    2.8%      |    4.2%          |    0.0%                             | 0
+   middle32 |    4.5%      |    4.0%          |    1.0%                             | 0
+   all32    |    0.0%      |    0.0%          |    0.0%                             | 0
+   (percentages are of the judged slots, which over-sample beach stories; compare arms to each other, not to Phase 5's 4.9%)
+   hidden beach in [ban]:  Once upon a time, there was a lovely girl named Lily. Lily loved to build with her family. Every day, they would go to the park and find many pretty seaweed. Lily was ve
+   hidden beach in [ban]:  Once upon a time, there was a little fish named Fin. Fin loved to dive deep in the deep seas. The reef was very big and very heavy, but Fin was scared. One day, he saw a
+   hidden beach in [middle32]:  Once upon a time, in a small town, there was a popular boat named Bob. Bob loved to sail on the water. One day, there was an earthquake. All the people people were scare
+   hidden beach in [middle32]:  Once upon a time, there was big big castle. In the castle, there lived a big cat named Bob. Bob liked to sail his big boat in the water. Every day, Bob would hit the boa
+=== DONE. Tell Claude: ncm5b ready ===

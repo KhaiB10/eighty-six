@@ -1,0 +1,39 @@
+=== eighty-six CONTROL: is the LM1B quality drop the locks or the pipeline? Sun Nov 22 02:08:23 AM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+   empty mask written
+
+-- arm: normal_again (unpatched)
+   42    95.76   4.3152
+    0    90.75   4.3126
+    1    92.86   4.3097
+    2    90.97   4.3156
+    3    95.41   4.3150
+
+ mean    93.15   4.3136   (+/- 2.37 over 5 seeds, 1280 samples)
+-- 3. patch the cook (v2: also locks the first shelf) (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: patched_empty
+   42    95.76   4.3152
+    0    90.75   4.3126
+    1    92.86   4.3097
+    2    90.97   4.3156
+    3    95.41   4.3150
+
+ mean    93.15   4.3136   (+/- 2.37 over 5 seeds, 1280 samples)
+
+-- arm: rand_midfine
+   42   102.01   4.3454
+    0   100.01   4.3390
+    1   101.65   4.3462
+    2   102.60   4.3475
+    3   107.57   4.3469
+
+ mean   102.77   4.3450   (+/- 2.85 over 5 seeds, 1280 samples)
+
+-- eval_shard.py restored to original
+
+How to read: normal_again ~93 and patched_empty ~93 -> the pipeline is fine and locking ~700 LM1B jars really costs
+quality. patched_empty ~100 -> my pipeline causes it (bug to fix before publishing). Compare rand_midfine with ncm14's
+small_rand_all (103.90) to see whether the first shelves are the sensitive part.
+=== DONE. Tell Claude: ncm14c ready ===

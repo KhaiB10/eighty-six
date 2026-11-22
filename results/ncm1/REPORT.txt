@@ -1,0 +1,132 @@
+=== NCM PHASE 1: THEIR MODELS ON OUR P40 Mon Nov  2 11:53:53 AM UTC 2026 ===
+Tesla P40, 7191 MiB, 23040 MiB
+-- 1. code
+   commit c702742  Wed Oct 14 02:13:18 2026 -0700
+-- 2. python environment (copy of the working P40 venv + NCM's needs)
+   torch 2.14.1+cu126 | GPU Tesla P40 | bf16 supported: True
+-- 3. checkpoints + test sets
+
+
+   downloaded hazyresearch/ncm-checkpoints -> /data/ncm/ncm/artifacts
+
+   downloaded hazyresearch/ncm-datasets -> /data/ncm/ncm/data
+   files:
+     artifacts/.cache/huggingface/download/tinystories/config.yaml.lock
+     artifacts/.cache/huggingface/download/tinystories/README.md.metadata
+     artifacts/.cache/huggingface/download/tinystories/generator.pt.lock
+     artifacts/.cache/huggingface/download/tinystories/generator.pt.metadata
+     artifacts/.cache/huggingface/download/tinystories/tokenizer.pt.metadata
+     artifacts/.cache/huggingface/download/tinystories/bpe_merges_8192.pickle.lock
+     artifacts/.cache/huggingface/download/tinystories/README.md.lock
+     artifacts/.cache/huggingface/download/tinystories/bpe_merges_8192.pickle.metadata
+     artifacts/.cache/huggingface/download/tinystories/config.yaml.metadata
+     artifacts/.cache/huggingface/download/tinystories/bpe_vocab_8192.pickle.metadata
+     artifacts/.cache/huggingface/download/tinystories/bpe_vocab_8192.pickle.lock
+     artifacts/.cache/huggingface/download/tinystories/tokenizer.pt.lock
+     artifacts/.cache/huggingface/download/lm1b/small/config.yaml.lock
+     artifacts/.cache/huggingface/download/lm1b/small/generator.pt.lock
+     artifacts/.cache/huggingface/download/lm1b/small/generator.pt.metadata
+     artifacts/.cache/huggingface/download/lm1b/small/config.yaml.metadata
+     artifacts/.cache/huggingface/download/lm1b/tokenizer.pt.metadata
+     artifacts/.cache/huggingface/download/lm1b/tokenizer.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/hard/config.yaml.lock
+     artifacts/.cache/huggingface/download/sudoku/hard/generator.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/hard/generator.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/hard/tokenizer.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/hard/config.yaml.metadata
+     artifacts/.cache/huggingface/download/sudoku/hard/tokenizer.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/README.md.metadata
+     artifacts/.cache/huggingface/download/sudoku/medium/config.yaml.lock
+     artifacts/.cache/huggingface/download/sudoku/medium/generator.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/medium/generator.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/medium/tokenizer.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/medium/config.yaml.metadata
+     artifacts/.cache/huggingface/download/sudoku/medium/tokenizer.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/easy/config.yaml.lock
+     artifacts/.cache/huggingface/download/sudoku/easy/generator.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/easy/generator.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/easy/tokenizer.pt.metadata
+     artifacts/.cache/huggingface/download/sudoku/easy/config.yaml.metadata
+     artifacts/.cache/huggingface/download/sudoku/easy/tokenizer.pt.lock
+     artifacts/.cache/huggingface/download/sudoku/README.md.lock
+     artifacts/.cache/huggingface/.gitignore
+     artifacts/.cache/huggingface/trees/d342ce8aaea58830eef3b8ad473664673e41f692.json
+   2.0G	artifacts
+   2.3M	data
+
+-- 4. EVALUATION (P40, FP32)  peak GPU memory is sampled below
+
+-- Sudoku EASY   (paper 99.5%)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1/sudoku-easy/
+shard(s) [0] failed; see /data/lab/ncm1/sudoku-easy/shard_*.log
+   (Sudoku EASY   (paper 99.5%): exit 1, 6s)
+VQVAE, Total parameter count: 14.90M
+VQVAE, Non embedding parameter count: 14.87M
+NCP Transformer, Total parameter count: 25.46M
+NCP Transformer, Non embedding parameter count: 25.32M
+Traceback (most recent call last):
+  File "/data/ncm/ncm/scripts/eval_shard.py", line 87, in <module>
+    items = pickle.load(open(os.path.join(dd, CFG.data[split]), "rb"))[:n]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/sudoku/puzzles.pickle'
+
+-- Sudoku MEDIUM (paper 96.5%)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1/sudoku-medium/
+shard(s) [0] failed; see /data/lab/ncm1/sudoku-medium/shard_*.log
+   (Sudoku MEDIUM (paper 96.5%): exit 1, 5s)
+VQVAE, Total parameter count: 14.90M
+VQVAE, Non embedding parameter count: 14.87M
+NCP Transformer, Total parameter count: 25.46M
+NCP Transformer, Non embedding parameter count: 25.32M
+Traceback (most recent call last):
+  File "/data/ncm/ncm/scripts/eval_shard.py", line 87, in <module>
+    items = pickle.load(open(os.path.join(dd, CFG.data[split]), "rb"))[:n]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/sudoku/puzzles.pickle'
+
+-- Sudoku HARD   (paper 86.1%)
+[evaluate] 1 shard(s) on GPU(s) 0 -> /data/lab/ncm1/sudoku-hard/
+shard(s) [0] failed; see /data/lab/ncm1/sudoku-hard/shard_*.log
+   (Sudoku HARD   (paper 86.1%): exit 1, 7s)
+VQVAE, Total parameter count: 14.90M
+VQVAE, Non embedding parameter count: 14.87M
+NCP Transformer, Total parameter count: 25.46M
+NCP Transformer, Non embedding parameter count: 25.32M
+Traceback (most recent call last):
+  File "/data/ncm/ncm/scripts/eval_shard.py", line 87, in <module>
+    items = pickle.load(open(os.path.join(dd, CFG.data[split]), "rb"))[:n]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'data/sudoku/puzzles.pickle'
+
+-- TinyStories   (paper genPPL 15.41, entropy 3.98)
+
+merged 1 shards -> 1280 tinystories outputs
+
+
+ seed   genPPL  entropy
+   42    15.99   3.9650
+    0    16.70   3.9753
+    1    16.67   3.9718
+    2    16.49   3.9601
+    3    16.09   3.9675
+
+ mean    16.39   3.9679   (+/- 0.33 over 5 seeds, 1280 samples)
+   (TinyStories   (paper genPPL 15.41, entropy 3.98): exit 0, 187s)
+
+-- LM1B small    (paper genPPL 93.05)
+
+merged 1 shards -> 1280 lm1b-small outputs
+
+
+ seed   genPPL  entropy
+   42    95.76   4.3152
+    0    90.75   4.3126
+    1    92.86   4.3097
+    2    90.97   4.3156
+    3    95.41   4.3150
+
+ mean    93.15   4.3136   (+/- 2.37 over 5 seeds, 1280 samples)
+   (LM1B small    (paper genPPL 93.05): exit 0, 131s)
+
+-- GPU: peak memory 22553 MiB, peak load  100 %
+=== NCM PHASE 1 DONE. Tell Claude: ncm1 ready ===

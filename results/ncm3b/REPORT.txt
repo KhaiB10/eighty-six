@@ -1,0 +1,27 @@
+=== NCM PHASE 3B: WORD-BAN BASELINE + PROPER RECOUNT Fri Nov 20 12:03:30 PM UTC 2026 ===
+-- 1. patch the final word-picking step (guarded; inactive without NCM_BAN)
+   patched ok
+
+-- arm: ban (word 'Lily' = token ids 413, 674 forbidden at the last step)
+
+ seed   genPPL  entropy
+   42    16.92   3.9670
+    0    17.49   3.9767
+    1    17.39   3.9729
+    2    17.12   3.9605
+    3    16.77   3.9679
+
+ mean    17.14   3.9690   (+/- 0.31 over 5 seeds, 1280 samples)
+   (ban: 115s)
+-- eval_shard.py restored to original
+
+-- 2. what is inside the output files, then one count per real story
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+   file layout (arm none, shard 0): {'idxs': list[1280] of int, 'hyps': list[1280] of str(526), 'refs': list[1280] of str(0), 'seeds': list[1280] of int, 'toks': list[1280] of list[128] of int, 'raw_ids': list[1280] of list[128] of int}
+
+   arm  | field | stories | Lily | Tim | other girls | top stand-in names
+
+   genPPL so far (lower = better): none 16.39±0.33 | r2 16.47±0.34 | r8 17.81±0.43 | ban: see the table above
+
+=== DONE. Tell Claude: ncm3b ready ===

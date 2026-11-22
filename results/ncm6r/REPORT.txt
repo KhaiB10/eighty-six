@@ -1,0 +1,383 @@
+=== eighty-six PHASE 6 RECON Fri Nov 20 01:45:30 PM UTC 2026 ===
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+-- 1. is 'Khai' new?  occurrences in TinyStories validation: 0
+-- 2. BPE split of ' Khai': [950, 5730, 107] -> [' K', 'ha', 'i']
+-- 2. BPE split of 'Khai': [77, 5730, 107] -> ['K', 'ha', 'i']
+-- 2. BPE split of ' Lily': [413] -> [' Lily']
+-- 3. existing pantry on 500 'Khai' stories: token accuracy 98.88% | 'Khai' rebuilt in 95.2% of stories
+      (if ~100%, the pantry can already SPELL Khai with old jars; the job is teaching the COOK to choose them)
+-- 4. per shelf: how often Khai stories use a different jar than the same Lily story (all positions | name positions)
+      L0  (  1 slots):  97.8% of jars differ
+      L1  (  8 slots):  70.1% of jars differ
+      L2  ( 16 slots):  79.2% of jars differ
+      L3  ( 24 slots):  83.6% of jars differ
+      L4  ( 32 slots):  85.7% of jars differ
+      L5  ( 40 slots):  87.7% of jars differ
+      L6  ( 52 slots):  88.9% of jars differ
+      L7  ( 64 slots):  88.1% of jars differ
+      L8  ( 76 slots):  91.3% of jars differ
+      L9  ( 92 slots):  92.7% of jars differ
+      L10 (108 slots):  93.6% of jars differ
+      L11 (128 slots):  87.8% of jars differ
+
+-- 5. generator training path (for the trainer)
+9:class _TiedCodebookHead(nn.Module):
+10:    def __init__(self, n_embd, codebook, learn_scale=True, trainable=False, use_bias=False):
+19:            self.register_buffer("E", codebook.detach().clone(), persistent=False)
+24:            self.register_buffer("E_sq", E_sq, persistent=False)
+25:        self.register_buffer("d_scale", E_sq.mean().clamp(min=1e-12), persistent=False)
+29:    def forward(self, x):
+38:    def __init__(self, head, bias):
+43:    def forward(self, x):
+48:class _SharedHeads(nn.Module):
+50:    def __init__(self, head, n, per_level_bias=False):
+58:    def __getitem__(self, i):
+61:    def __len__(self):
+67:    def __init__(self,
+68:                 vqvae_local,
+81:        self.vqvae_local = (vqvae_local,)
+83:        self.levels = self.vqvae_local[0].vq.levels
+84:        self.L = sum(self.levels)
+90:        self._lvl_first = 0 if self.query_level0 else 1
+91:        T = self.L if self.query_level0 else self.L - self.levels[0]
+100:            levels_target = self.levels[self._lvl_first:]
+107:            self.register_buffer('rope_cos', cos_full, persistent=False)
+108:            self.register_buffer('rope_sin', sin_full, persistent=False)
+116:                self.register_buffer(f'rope_cos_gen_{k}', cos_k, persistent=False)
+117:                self.register_buffer(f'rope_sin_gen_{k}', sin_k, persistent=False)
+119:            T_max = max(P, max(self.levels[self._lvl_first:]))
+##### NextConceptTransformer.__init__ (heads + levels)
+19:        self.levels = self.vqvae_local[0].vq.levels
+20:        self.L = sum(self.levels)
+26:        self._lvl_first = 0 if self.query_level0 else 1
+27:        T = self.L if self.query_level0 else self.L - self.levels[0]
+36:            levels_target = self.levels[self._lvl_first:]
+40:                *[torch.arange(l, dtype=torch.long) for l in levels_target],
+46:            for k, l_k in enumerate(levels_target):
+55:            T_max = max(P, max(self.levels[self._lvl_first:]))
+59:                [torch.arange(l, dtype=torch.long) for l in self.levels[self._lvl_first:]]
+68:            wte = nn.Linear(self.vqvae_local[0].embed_dim, n_embd, bias=bias)
+92:            self.ctx_wte = nn.Embedding(ctx_vocab, n_embd)
+96:                    g = GPT2Model.from_pretrained('gpt2').wte.weight.data.to(
+97:                        self.ctx_wte.weight.dtype)
+101:                    self.ctx_wte.weight[:n].copy_(g[:n])
+103:                        nn.init.trunc_normal_(self.ctx_wte.weight[n:],
+107:                    src = self.vqvae_local[0].encoder.wte.weight
+108:                    proj = self.transformer.wte.weight
+110:                    if self.transformer.wte.bias is not None:
+111:                        w = w + self.transformer.wte.bias
+113:                    self.ctx_wte.weight[:V].copy_(w[:V])
+115:                nn.init.trunc_normal_(self.ctx_wte.weight, mean=0.0, std=init_std)
+127:                for _ in range(len(self.levels) - (0 if self.query_level0 else 1))
+135:                wle = nn.Embedding(len(self.levels) - (0 if self.query_level0 else 1), n_embd)
+144:        _n_heads = len(self.levels) - (0 if self.query_level0 else 1)
+147:            f"(query_level0={self.query_level0}, levels={len(self.levels)})"
+156:            _hb = bool(getattr(config, 'untied_head_bias', True)) and not _plb
+157:            self.lm_heads = _SharedHeads(nn.Linear(n_embd, self.vocab_sizes[0], bias=_hb),
+159:        elif bool(getattr(config, 'tie_heads_to_codebook', False)):
+161:            _ls = bool(getattr(config, 'tie_heads_learn_scale', True))
+162:            _tr = bool(getattr(config, 'tie_heads_trainable', False))
+163:            _bi = bool(getattr(config, 'tie_heads_bias', False))
+164:            self.lm_heads = nn.ModuleList([
+165:                _TiedCodebookHead(n_embd, _vq.embeddings[i + self._lvl_first].weight,
+170:            _hb = bool(getattr(config, 'untied_head_bias', True))
+171:            self.lm_heads = nn.ModuleList([
+177:                torch.zeros(1, self.levels[0], self.vqvae_local[0].embed_dim))
+185:        self.predict_level0 = bool(getattr(config, 'predict_level0', False))
+186:        self.max_vocab = max(self.vocab_sizes + [self.vqvae_local[0].vq.vqvae_vocab_sizes[0]])
+187:        if self.predict_level0:
+189:            assert P >= self.levels[0], (
+190:                f"predict_level0 reads the last {self.levels[0]} prefix positions; "
+193:            if bool(getattr(config, 'tie_heads_to_codebook', False)):
+194:                self.lm_head_l0 = _TiedCodebookHead(
+196:                    learn_scale=bool(getattr(config, 'tie_heads_learn_scale', True)),
+197:                    trainable=bool(getattr(config, 'tie_heads_trainable', False)),
+198:                    use_bias=bool(getattr(config, 'tie_heads_bias', False)))
+200:                self.lm_head_l0 = nn.Linear(n_embd, v0, bias=False)
+204:        d = torch.cat([torch.full((l,), i) for i, l in enumerate(self.levels[self._lvl_first:])]).view(1, T, 1)
+214:            _l0 = self.levels[0]
+234:                       for i, l in enumerate(self.levels[self._lvl_first:])]),
+243:        total_params, non_embd_params = count_params(self, exclude_params=['wte', 'wle', 'wpe'])
+##### forward + inputs
+    def _encode_context(self, prefix_ids):
+        if self.ctx_pretrained:
+            am = (prefix_ids != self.ctx_pad_id).long()
+            if self.ctx_t5_finetune:
+                h = self.ctx_t5(input_ids=prefix_ids, attention_mask=am).last_hidden_state
+            else:
+                with torch.no_grad():
+                    h = self.ctx_t5(input_ids=prefix_ids,
+                                    attention_mask=am).last_hidden_state
+            return self.ctx_proj(h.to(self.ctx_proj.weight.dtype))
+        h = self.ctx_wte(prefix_ids)
+        rope_p = (self.rope_cos[:self.prefix_len],
+                  self.rope_sin[:self.prefix_len]) if self.use_rope else None
+        P = self.prefix_len
+        ctx_mask = torch.zeros(1, 1, P, P, device=h.device)
+        for block in self.ctx_blocks:
+            h = block(h, attn_mask=ctx_mask, rope_cos_sin=rope_p)
+        return self.ctx_ln(h)
+
+    def forward(self, x, prefix_ids=None, prefix_pad_mask=None):
+        if self.use_ctx_encoder:
+            assert prefix_ids is not None, "ctx_encoder requires prefix_ids"
+            prefix_emb = self._encode_context(prefix_ids)
+            x_target = x
+            if self.use_post_upsample_conv:
+                x_target = self._apply_post_upsample_convs_multi(x_target)
+            x = self.transformer.wte(x_target)
+            if not self.use_rope:
+                x = x + self.wpe(self.wp_1L)
+            if self.config.use_level_encoding:
+                x = x + self.transformer.wle(self.lvl_1L)
+            return self._run_stack(prefix_emb, x, prefix_pad_mask)
+
+        z_prefix = x[:, :self.prefix_len, :]
+        x_target = x[:, self.prefix_len:, :]
+
+        if self.use_post_upsample_conv:
+            x_target = self._apply_post_upsample_convs_multi(x_target)
+
+        prefix_emb = self.transformer.wte(z_prefix)
+        x = self.transformer.wte(x_target)
+
+        if not self.use_rope:
+            prefix_emb = prefix_emb + self.wpe(self.wp_prefix)
+            x = x + self.wpe(self.wp_1L)
+
+        if self.config.use_level_encoding:
+            x += self.transformer.wle(self.lvl_1L)
+
+        return self._run_stack(prefix_emb, x, prefix_pad_mask)
+
+##### quant.py: idx_to_ncm_input, get_next_autoregressive_input, idx_to_zhats
+    def idx_to_zhats(self, idx, return_zlevels=True):
+        z_hats = []
+        z_levels = []
+        z_hat = torch.zeros(
+            idx.shape[0], self.levels[-1], self.embed_dim, device=idx.device
+        )
+
+        level_accum = 0
+        for level_idx in range(len(self.levels)):
+            emb_i = self.embeddings[level_idx]
+            emb_at_level = emb_i(idx[:, level_accum : level_accum + self.levels[level_idx]])
+            if level_idx != len(self.levels) - 1:
+                z_q_level = self._up_to_full(emb_at_level, level_idx, self.levels[-1])
+            else:
+                z_q_level = emb_at_level
+            z_q_level = self._apply_quant_resi(z_q_level, level_idx)
+            z_hat.add_(z_q_level)
+            z_hats.append(z_hat)
+            if return_zlevels:
+                z_levels.append(
+                    F.interpolate(
+                        z_hat.transpose(-1, -2),
+                        size=(self.levels[level_idx],),
+                        mode="area",
+                    ).transpose(-1, -2)
+                    if level_idx != len(self.levels) - 1
+                    else z_hat
+                )
+            level_accum += self.levels[level_idx]
+
+        results = (z_hats,)
+        if return_zlevels:
+            results = results + (z_levels,)
+        return results
+
+    @torch.no_grad()
+    def idx_to_ncm_input(self, idx):
+        next_concepts = []
+        z_hat = torch.zeros(
+            idx.shape[0], self.levels[-1], self.embed_dim, device=idx.device
+        )
+        n_levels = len(self.levels)
+
+        level_accum = 0
+        for level_idx in range(n_levels - 1):
+            emb_i = self.embeddings[level_idx]
+            emb_at_level = emb_i(idx[:, level_accum : level_accum + self.levels[level_idx]])
+            z_q_level = self._up_to_full(emb_at_level, level_idx, self.levels[-1])
+            z_q_level = self._apply_quant_resi(z_q_level, level_idx)
+            z_hat.add_(z_q_level)
+            next_concepts.append(
+                F.interpolate(
+                    z_hat.transpose(-1, -2),
+                    size=(self.levels[level_idx + 1],),
+                    mode="area",
+                ).transpose(-1, -2)
+            )
+            level_accum += self.levels[level_idx]
+
+        return torch.cat(next_concepts, dim=1)
+
+    @torch.no_grad()
+    def get_next_autoregressive_input(self, level_idx, z_hat, z_q_level):
+        n_levels = len(self.levels)
+        if level_idx != n_levels - 1:
+            upsampled = self._up_to_full(z_q_level, level_idx, self.levels[-1])
+            upsampled = self._apply_quant_resi(upsampled, level_idx)
+            z_hat.add_(upsampled)
+            return z_hat, (F.interpolate(
+                z_hat.transpose(-1, -2), size=(self.levels[level_idx + 1],), mode="area"
+            ).transpose(-1, -2))
+        else:
+            z_q_level = self._apply_quant_resi(z_q_level, level_idx)
+            z_hat.add_(z_q_level)
+            return z_hat, z_hat
+
+    @torch.no_grad()
+    def idx_to_z_q(self, indices):
+##### eval_shard.py: how generation is set up
+adj = str(a.adj if a.adj is not None else G.get("adjacency_penalty", "") or "")
+split = a.split or CFG.eval.get("split", "test")
+n = a.n or int(CFG.eval.get("n_docs", 0))
+bs = a.bs or int(CFG.eval.batch_size)
+
+CFG.tokenizer.vqvae.checkpoint_path = os.path.join(ck, CFG.checkpoints.tokenizer)
+for key, name in (('vocab_file_path', 'bpe_vocab'), ('merges_file_path', 'bpe_merges')):
+    if CFG.checkpoints.get(name):
+        CFG.tokenizer.pre_tokenizer[key] = os.path.join(ck, CFG.checkpoints[name])
+tk = VQVAETokenizer.from_config(CFG.tokenizer)
+tk.vqvae = tk.vqvae.cuda().eval()
+net = NextConceptTransformer(vqvae_local=tk.vqvae, config=CFG.model).cuda()
+sd = torch.load(os.path.join(ck, CFG.checkpoints.generator), map_location="cpu", weights_only=False)
+net.load_state_dict(sd["model"], strict=True)
+net.eval()
+P = int(CFG.model.prefix_len)
+EOS, PAD = tk.pre_tokenizer.eos_token_id, tk.pre_tokenizer.pad_token_id
+
+
+def load_allowance(spec):
+    if ":" in spec:
+        path, ref = spec.split(":", 1)
+        obj = torch.load(os.path.join(ck, path), map_location="cuda", weights_only=False)
+        for k in ref.split("."):
+            obj = obj[k]
+        return obj.double()
+    return torch.load(os.path.join(ck, spec), map_location="cuda").double()
+
+
+ALLOW = load_allowance(str(G.frequency_allowance)) if G.get("frequency_allowance") else None
+L0_MODE = a.l0 or "unigram"
+L0_P = load_allowance(str(G.level0_unigram)).float() if G.get("level0_unigram") else None
+if L0_P is not None and L0_MODE == "active":
+    L0_P = (L0_P > 0).float() / (L0_P > 0).sum()
+elif L0_P is not None and L0_MODE == "uniform":
+    L0_P = torch.ones_like(L0_P) / L0_P.numel()
+elif L0_P is not None and L0_MODE.startswith("smooth:"):
+    eps = float(L0_MODE.split(":", 1)[1])
+    L0_P = (1.0 - eps) * L0_P + eps * torch.ones_like(L0_P) / L0_P.numel()
+UNCOND = not CFG.data or not CFG.data.get(split)
+ADJ = [float(v) for v in adj.split(",")] if adj else None
+
+if UNCOND:
+    seeds = [int(x) for x in CFG.eval.seeds][a.shard::a.nshards]
+    n = a.n or int(CFG.eval.n_samples)
+    items, refs, idxs, src_tok = [], [], [], None
+else:
+    items = pickle.load(open(os.path.join(dd, CFG.data[split]), "rb"))[:n]
+    refs = pickle.load(open(os.path.join(dd, CFG.data[f"{split}_refs"]), "rb"))[:n]
+    assert len(items) == len(refs), f"{len(items)} inputs vs {len(refs)} references"
+    idxs = list(range(a.shard, len(items), a.nshards))
+    src_tok = AutoTokenizer.from_pretrained(str(CFG.tokenizer.pre_tokenizer.model_id)) if isinstance(items[0], str) else None
+
+
+def prefix(item):
+    ids = src_tok(item)["input_ids"] if src_tok is not None else list(item)
+    return (ids[:P] + [PAD] * P)[:P]
+
+
+def pick_tokens(logits):
+    if freq <= 0 and not ADJ:
+        return logits.argmax(-1)
+    B, T, V = logits.shape
+    lg = logits.double()
+    allow = (ALLOW[:V] * T)[None, :] if ALLOW is not None else None
+    al = ADJ[0] if ADJ else 0.0
+    aw = int(ADJ[1]) if ADJ and len(ADJ) > 1 else 1
+    ad = ADJ[2] if ADJ and len(ADJ) > 2 else 1.0
+    cnt = torch.zeros(B, V, dtype=torch.float64, device=lg.device)
+    out = torch.empty(B, T, dtype=torch.long, device=lg.device)
+    hist = []
+    for t in range(T):
+        step = lg[:, t, :].clone()
+        if freq > 0:
+            excess = (cnt - allow).clamp_min(0.0) if allow is not None else cnt
+            step -= freq * excess
+            if mu > 0 and allow is not None:
+                step += mu * ((T - t) / T) * (allow - cnt).clamp_min(0.0)
+        for j, h in enumerate(reversed(hist[-aw:])):
+            step.scatter_add_(1, h[:, None], torch.full((B, 1), -al * ad ** j, dtype=torch.float64, device=lg.device))
+        p = step.argmax(-1)
+        out[:, t] = p
+        hist.append(p)
+        cnt.scatter_add_(1, p[:, None], torch.ones(B, 1, dtype=torch.float64, device=lg.device))
+    return out
+
+
+CUT_AT_EOS = bool(G.get("cut_at_eos", True))
+
+
+def dec(ids):
+    ids = list(ids)
+    if CUT_AT_EOS and EOS in ids:
+        ids = ids[:ids.index(EOS)]
+    return tk.pre_tokenizer.decode([t for t in ids if t not in (EOS, PAD)], skip_special_tokens=True)
+
+
+RAW = []
+
+
+def run(x, l0=None):
+    with torch.no_grad():
+        g = net.generate(l0, x, temperature=temp, top_k=top_k, top_p=top_p, cfg_scale=cfg, cfg_null_eos=EOS)
+        _, zl = tk.vqvae.vq.idx_to_zhats(g, return_zlevels=True)
+        ids = pick_tokens(tk.vqvae.decoder(zl[-1])).tolist()
+        RAW.extend(ids)
+        return [dec(r) for r in ids]
+
+
+hyps, sample_seed = [], []
+if UNCOND:
+    L0 = tk.vqvae.vq.levels[0]
+    for seed in seeds:
+        torch.manual_seed(seed)
+        for s in range(0, n, bs):
+            B = min(bs, n - s)
+            l0 = torch.multinomial(L0_P.cpu(), B * L0, replacement=True).view(B, L0).cuda() if L0_P is not None else None
+            hyps += run(torch.full((B, 1), EOS, device="cuda"), l0)
+            sample_seed += [seed] * B
+        print(f"  shard{a.shard} seed {seed}: {n} samples", flush=True)
+    idxs = list(range(len(hyps)))
+##### generator.pt contents
+top keys: ['model', 'inference']
+  transformer.wte.weight (768, 384)
+  transformer.wte.bias (768,)
+  transformer.wle.weight (11, 768)
+  lm_heads.0.log_inv_T ()
+  lm_heads.0.proj.weight (384, 768)
+  lm_heads.1.log_inv_T ()
+  lm_heads.1.proj.weight (384, 768)
+  lm_heads.2.log_inv_T ()
+  lm_heads.2.proj.weight (384, 768)
+  lm_heads.3.log_inv_T ()
+  lm_heads.3.proj.weight (384, 768)
+  lm_heads.4.log_inv_T ()
+  lm_heads.4.proj.weight (384, 768)
+  lm_heads.5.log_inv_T ()
+  lm_heads.5.proj.weight (384, 768)
+  lm_heads.6.log_inv_T ()
+  lm_heads.6.proj.weight (384, 768)
+  lm_heads.7.log_inv_T ()
+  lm_heads.7.proj.weight (384, 768)
+  lm_heads.8.log_inv_T ()
+  lm_heads.8.proj.weight (384, 768)
+  lm_heads.9.log_inv_T ()
+  lm_heads.9.proj.weight (384, 768)
+  lm_heads.10.log_inv_T ()
+  lm_heads.10.proj.weight (384, 768)
+  meta inference {'level0_unigram': tensor([0.0004, 0.0005, 0.0006,  ..., 0.0000, 0.0000, 0.0000])}
+=== DONE. Tell Claude: ncm6r ready ===

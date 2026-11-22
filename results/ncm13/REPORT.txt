@@ -1,0 +1,72 @@
+=== eighty-six SCALE-UP STEP 1: MEET THE THREE COOKS Sat Nov 21 10:38:09 AM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+-- 1. real LM1B validation sentences
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+   ok: /data/ncm/audit/lm1b/valid_bert_30522.bin
+   ok: /data/ncm/audit/lm1b/valid_bert_30522_offsets.npy
+   ok: /data/ncm/audit/lm1b/README.md
+   | # LM1B
+   | 
+   | Tokenized One Billion Word Benchmark text with the BERT uncased vocabulary: training and validation token streams, each with a story-offsets file.
+
+-- 2. quality: LM1B MEDIUM (317M)
+ seed   genPPL  entropy
+   42    89.08   4.3407
+    0    89.08   4.3376
+    1    87.22   4.3387
+    2    89.61   4.3468
+    3    86.80   4.3399
+
+ mean    88.36   4.3408   (+/- 1.26 over 5 seeds, 1280 samples)
+   (LM1B MEDIUM (317M): 3 min)
+
+-- 2. quality: LM1B LARGE  (725M)
+ seed   genPPL  entropy
+   42    82.33   4.3426
+    0    80.84   4.3330
+    1    82.10   4.3394
+    2    81.57   4.3384
+    3    78.77   4.3352
+
+ mean    81.12   4.3377   (+/- 1.43 over 5 seeds, 1280 samples)
+   (LM1B LARGE  (725M): 6 min)
+
+   (small, from Phase 1 on this P40: genPPL 93.15 +/- 2.37, paper 93.05)
+
+-- 3. how common are candidate targets? (% of sentences containing the word)
+   real validation: 71826 sentences, 9193600 tokens, offsets shape (71826,), first offsets [0, 128, 256, 384]
+   two real sentences: are planned between mitchell and netanyahu as early as next week. upload the plan to scribd at www. scribd. com / dream  | rain and a shortage of oxygen tanks are hampering rescue efforts, officials said, as hopes fade of any survivors being f
+   small cook: 1280 sentences, e.g. ''
+   medium cook: 1280 sentences, e.g. ''
+   large cook: 1280 sentences, e.g. ''
+
+   word         |  REAL text | small cook | medium cook | large cook
+   obama        |       7.3% |       0.0% |       0.0% |       0.0%
+   bush         |       2.6% |       0.0% |       0.0% |       0.0%
+   china        |       3.6% |       0.0% |       0.0% |       0.0%
+   iraq         |       2.6% |       0.0% |       0.0% |       0.0%
+   afghanistan  |       2.1% |       0.0% |       0.0% |       0.0%
+   london       |       3.3% |       0.0% |       0.0% |       0.0%
+   paris        |       0.8% |       0.0% |       0.0% |       0.0%
+   america      |       2.6% |       0.0% |       0.0% |       0.0%
+   police       |       8.0% |       0.0% |       0.0% |       0.0%
+   president    |       8.2% |       0.0% |       0.0% |       0.0%
+   government   |      10.8% |       0.0% |       0.0% |       0.0%
+   election     |       2.9% |       0.0% |       0.0% |       0.0%
+   football     |       1.1% |       0.0% |       0.0% |       0.0%
+   game         |       4.4% |       0.0% |       0.0% |       0.0%
+   team         |       4.5% |       0.0% |       0.0% |       0.0%
+   season       |       4.1% |       0.0% |       0.0% |       0.0%
+   music        |       1.8% |       0.0% |       0.0% |       0.0%
+   film         |       1.8% |       0.0% |       0.0% |       0.0%
+   bank         |       4.0% |       0.0% |       0.0% |       0.0%
+   market       |       4.4% |       0.0% |       0.0% |       0.0%
+   oil          |       3.1% |       0.0% |       0.0% |       0.0%
+   economy      |       3.4% |       0.0% |       0.0% |       0.0%
+   war          |       3.3% |       0.0% |       0.0% |       0.0%
+   health       |       4.6% |       0.0% |       0.0% |       0.0%
+   school       |       4.0% |       0.0% |       0.0% |       0.0%
+   company      |       7.6% |       0.0% |       0.0% |       0.0%
+
+   A target needs ~3%+ in the cooks' sentences to be measurable with 1,280 samples (about 40 sentences).
+=== DONE. Tell Claude: ncm13 ready ===

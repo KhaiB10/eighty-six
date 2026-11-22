@@ -1,0 +1,74 @@
+=== eighty-six STEP 2b: PLACEBO Fri Nov 20 08:11:53 PM UTC 2026 ===
+   paused Ollama (Aster) for this run; it restarts automatically at the end
+   GPU before start: 151 MiB, 23040 MiB
+-- 1. build random locks matched to Lily's r2 jars (same shelves, same count, similar usage)
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+   shelf | Lily jars | their median background use | random jars' median use
+   L0   |   64      |        1                     |        1
+   L1   |   64      |        4                     |        4
+   L2   |   64      |       10                     |       10
+   L3   |   64      |       18                     |       18
+   L4   |   64      |       26                     |       26
+   L5   |   64      |       20                     |       21
+   L6   |   64      |       35                     |       35
+   L7   |   64      |       41                     |       40
+   L8   |   64      |       50                     |       50
+   L9   |   64      |       55                     |       55
+   L10  |   64      |       75                     |       75
+   L11  |   56      |      101                     |      108
+   rand_coarse 256 random jars
+   rand_middle 256 random jars
+   rand_fine   248 random jars
+   rand_all    760 random jars
+-- 2. patch the cook (v2: also locks the first shelf) (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: rand_coarse
+ mean    16.45   3.9746   (+/- 0.40 over 5 seeds, 1280 samples)
+   (rand_coarse: 114s)
+   NCM_MASK level-0 picks that were masked jars: {'l0_masked': 38, 'l0_total': 1280}
+
+-- arm: rand_middle
+ mean    16.40   3.9682   (+/- 0.30 over 5 seeds, 1280 samples)
+   (rand_middle: 114s)
+   NCM_MASK level-0 picks that were masked jars: {'l0_masked': 0, 'l0_total': 1280}
+
+-- arm: rand_fine
+ mean    16.56   3.9677   (+/- 0.35 over 5 seeds, 1280 samples)
+   (rand_fine: 115s)
+   NCM_MASK level-0 picks that were masked jars: {'l0_masked': 0, 'l0_total': 1280}
+
+-- arm: rand_all
+ mean    16.77   3.9759   (+/- 0.31 over 5 seeds, 1280 samples)
+   (rand_all: 114s)
+   NCM_MASK level-0 picks that were masked jars: {'l0_masked': 38, 'l0_total': 1280}
+
+-- eval_shard.py restored to original
+
+-- 3. placebo vs targeted (one count per story; 'bark' no longer counts as a dog word)
+arm               | Lily  | Spot  | girl hero | boy names | dog stories | she/her
+normal            |  14.9% |   5.4% |  42.3%    |  56.4%    |  17.4%      |  39.5%
+RANDOM top L0-3   |  14.8% |   4.3% |  43.2%    |  55.9%    |  17.0%      |  44.1%
+Lily top L0-3     |   4.7% |   5.8% |  28.9%    |  58.8%    |  19.1%      |  32.0%
+Spot top L0-3     |  14.7% |   0.6% |  42.5%    |  56.7%    |   8.1%      |  38.9%
+RANDOM middle     |  15.2% |   5.1% |  42.1%    |  56.2%    |  18.0%      |  40.5%
+Lily middle       |   3.0% |   5.3% |  39.1%    |  56.3%    |  17.7%      |  40.2%
+Spot middle       |  14.8% |   2.4% |  42.4%    |  57.0%    |  12.4%      |  40.4%
+RANDOM bottom     |  14.9% |   5.4% |  42.4%    |  56.3%    |  17.3%      |  39.3%
+Lily bottom       |  14.9% |   5.6% |  42.4%    |  57.0%    |  17.4%      |  39.8%
+RANDOM all        |  14.5% |   4.1% |  42.8%    |  56.0%    |  17.3%      |  43.0%
+Lily all (r2)     |   0.0% |   5.7% |  26.9%    |  58.7%    |  19.6%      |  32.0%
+Spot all          |  14.8% |   0.0% |  42.5%    |  56.1%    |   3.4%      |  38.8%
+dog-topic ban     |  14.9% |   5.4% |  42.3%    |  56.6%    |   0.0%      |  39.5%
+dog-topic coarse32 |  14.5% |   1.6% |  43.0%    |  57.0%    |   7.0%      |  40.7%
+dog-topic middle32 |  14.5% |   2.6% |  42.3%    |  57.3%    |  10.9%      |  39.6%
+dog-topic fine32  |  15.0% |   5.1% |  42.7%    |  57.0%    |  15.4%      |  39.5%
+dog-topic all32   |  14.4% |   0.0% |  43.2%    |  57.3%    |   0.5%      |  40.9%
+dog-topic coarse128 |  15.5% |   0.6% |  43.0%    |  56.6%    |   3.9%      |  41.7%
+
+How to read: compare each RANDOM row with the targeted rows on the same shelves. If RANDOM top also drops girls
+and dogs, the top-shelf effect is partly 'any lock up there shakes the plan'. Margin of error ~ +/-2-3 points at 15-40%.
+genPPL (quality) per new arm is the 'mean' line under each '-- arm:' above. Normal cook: 16.39 +/- 0.33
+=== DONE. Tell Claude: ncm9 ready ===
+   Ollama (Aster) restarted

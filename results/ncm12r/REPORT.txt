@@ -1,0 +1,83 @@
+=== eighty-six SCALE-UP RECON Sat Nov 21 12:06:29 AM UTC 2026 ===
+-- 0. disk space
+   /dev/nvme0n1p1  378G  228G  132G  64% /data
+-- 1. what Stanford published (file sizes)
+   hazyresearch/ncm-checkpoints:
+      .gitattributes                 0.00 GB
+      README.md                      0.00 GB
+      lm1b                           0.60 GB
+      lm1b/large                     2.90 GB
+      lm1b/medium                    1.27 GB
+      lm1b/small                     0.39 GB
+      owt                            0.00 GB
+      sudoku                         0.00 GB
+      sudoku/easy                    0.16 GB
+      sudoku/hard                    0.16 GB
+      sudoku/medium                  0.16 GB
+      tinystories                    0.58 GB
+      wmt14                          1.13 GB
+      xsum                           0.65 GB
+   hazyresearch/ncm-datasets:
+      .gitattributes                 0.00 GB
+      README.md                      0.00 GB
+      lm1b                           1.89 GB
+      owt                           18.14 GB
+      sudoku/easy                    0.00 GB
+      sudoku/hard                    0.00 GB
+      sudoku/medium                  0.00 GB
+      tinystories                    2.68 GB
+      wmt14                          0.00 GB
+      xsum                           0.02 GB
+-- 2. download LM1B medium + large + OpenWebText (skips what is already here)
+
+
+   ok: ['lm1b/medium/*', 'lm1b/large/*']
+
+   ok: ['owt/*', 'openwebtext/*']
+   artifacts/lm1b/large/config.yaml
+   artifacts/lm1b/large/generator.pt
+   artifacts/lm1b/medium/config.yaml
+   artifacts/lm1b/medium/generator.pt
+   artifacts/lm1b/small/config.yaml
+   2.8G	artifacts/lm1b/large
+   1.2G	artifacts/lm1b/medium
+   373M	artifacts/lm1b/small
+   571M	artifacts/lm1b/tokenizer.pt
+   8.0K	artifacts/owt
+-- 3. configs (levels, codebooks, text tokenizer, generator size, generation settings)
+##### artifacts/lm1b/small/config.yaml
+   generator: n_layer 12 n_embd 768 n_head 12 | context 129 | prefix_len 1
+   pre_tokenizer: {'name': 'hf', 'tokenizer': 'hf', 'model_id': 'bert-base-uncased', 'special_tokens': {'eos_token': '[CLS]', 'pad_token': '[PAD]'}}
+   pantry: embed_dim 384 | context 128 | codes/level [8192, 8192, 8192] ... x 12
+   levels: [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128]
+   generation: {'temperature': 1.0, 'top_k': 0, 'top_p': 1.0, 'cfg_scale': 0.0, 'frequency_penalty': 11.5, 'frequency_deficit': 2.0, 'adjacency_penalty': '10,4,0.5', 'frequency_allowance': 'generator.pt:inference.token_unigram', 'level0_unigram': 'generator.pt:inference.level0_unigram'} | eval: {'n_samples': 256, 'seeds': [42, 0, 1, 2, 3], 'batch_size': 8, 'ref_model': 'gpt2-large'}
+##### artifacts/lm1b/medium/config.yaml
+   generator: n_layer 24 n_embd 1024 n_head 16 | context 129 | prefix_len 1
+   pre_tokenizer: {'name': 'hf', 'tokenizer': 'hf', 'model_id': 'bert-base-uncased', 'special_tokens': {'eos_token': '[CLS]', 'pad_token': '[PAD]'}}
+   pantry: embed_dim 384 | context 128 | codes/level [8192, 8192, 8192] ... x 12
+   levels: [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128]
+   generation: {'temperature': 1.0, 'top_k': 0, 'top_p': 1.0, 'cfg_scale': 0.0, 'frequency_penalty': 11.5, 'frequency_deficit': 2.0, 'adjacency_penalty': '10,4,0.5', 'frequency_allowance': 'generator.pt:inference.token_unigram', 'level0_unigram': 'generator.pt:inference.level0_unigram'} | eval: {'n_samples': 256, 'seeds': [42, 0, 1, 2, 3], 'batch_size': 8, 'ref_model': 'gpt2-large'}
+##### artifacts/lm1b/large/config.yaml
+   generator: n_layer 36 n_embd 1280 n_head 20 | context 129 | prefix_len 1
+   pre_tokenizer: {'name': 'hf', 'tokenizer': 'hf', 'model_id': 'bert-base-uncased', 'special_tokens': {'eos_token': '[CLS]', 'pad_token': '[PAD]'}}
+   pantry: embed_dim 384 | context 128 | codes/level [8192, 8192, 8192] ... x 12
+   levels: [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128]
+   generation: {'temperature': 1.0, 'top_k': 0, 'top_p': 1.0, 'cfg_scale': 0.0, 'frequency_penalty': 11.5, 'frequency_deficit': 2.0, 'adjacency_penalty': '10,4,0.5', 'frequency_allowance': 'generator.pt:inference.token_unigram', 'level0_unigram': 'generator.pt:inference.level0_unigram'} | eval: {'n_samples': 256, 'seeds': [42, 0, 1, 2, 3], 'batch_size': 8, 'ref_model': 'gpt2-large'}
+-- 4. real-world text for the audits
+   ncm-datasets lm1b/owt files: ['lm1b/README.md', 'lm1b/train_bert_30522.bin', 'lm1b/train_bert_30522_offsets.npy', 'lm1b/valid_bert_30522.bin', 'lm1b/valid_bert_30522_offsets.npy', 'owt/README.md', 'owt/train_gpt2.bin', 'owt/train_gpt2_offsets.npy', 'owt/valid_gpt2.bin', 'owt/valid_gpt2_offsets.npy']
+   dvruette/lm1b: 12 files, e.g. ['.gitattributes', 'README.md', 'data/test-00000-of-00001.parquet', 'data/train-00000-of-00009.parquet']
+   lm1b: 5 files, e.g. ['.gitattributes', 'README.md', 'lm1b.py', 'urls_checksums/cached_sizes.txt']
+   Skylion007/openwebtext: 82 files, e.g. ['.gitattributes', 'README.md', 'plain_text/train-00000-of-00080.parquet', 'plain_text/train-00001-of-00080.parquet']
+   stas/openwebtext-10k: 5 files, e.g. ['.gitattributes', 'README.md', 'dataset_infos.json', 'openwebtext-10k.py']
+-- 5. does the LM1B pantry load, and how are names tokenized? (uncased tokenizers lowercase everything)
+VQVAE, Total parameter count: 111.40M
+VQVAE, Non embedding parameter count: 99.63M
+   'obama'      -> [101, 8112, 102] -> ['[CLS]', 'obama', '[SEP]']
+   'Obama'      -> [101, 8112, 102] -> ['[CLS]', 'obama', '[SEP]']
+   'paris'      -> [101, 3000, 102] -> ['[CLS]', 'paris', '[SEP]']
+   'china'      -> [101, 2859, 102] -> ['[CLS]', 'china', '[SEP]']
+   'london'     -> [101, 2414, 102] -> ['[CLS]', 'london', '[SEP]']
+   'football'   -> [101, 2374, 102] -> ['[CLS]', 'football', '[SEP]']
+   'iraq'       -> [101, 5712, 102] -> ['[CLS]', 'iraq', '[SEP]']
+   'microsoft'  -> [101, 7513, 102] -> ['[CLS]', 'microsoft', '[SEP]']
+=== DONE. Tell Claude: ncm12r ready ===

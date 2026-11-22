@@ -1,0 +1,78 @@
+=== eighty-six PHASE 5: LADDER STEP 2: 86 DOG STORIES Fri Nov 20 07:10:21 PM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+-- 1. audit: which jars do dog stories use, per shelf (story level, every position)
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+   word-ban list (dog words that are single tokens): ['dog', 'barked', 'puppy', 'bark', 'dogs', 'Doggy', 'barking', 'pup', 'barks', 'Woof', 'Dog', 'doggy', 'woof', 'Doggy', 'Dog', 'Pup', 'puppies', 'Woof', 'Puppy']
+   dog stories 1500 | background 4000
+   shelf | top-32 dog jars: share of dog-story use | share of background use | ratio
+   L0   |  13.20% |   8.23% |    1.6x
+   L1   |   8.29% |   0.03% |  294.8x
+   L2   |   5.32% |   0.08% |   69.6x
+   L3   |   4.92% |   0.03% |  162.9x
+   L4   |   5.59% |   0.04% |  143.0x
+   L5   |   4.72% |   0.01% |  580.7x
+   L6   |   3.55% |   0.02% |  150.5x
+   L7   |   4.49% |   0.07% |   67.2x
+   L8   |   4.64% |   0.06% |   76.7x
+   L9   |   4.27% |   0.06% |   66.9x
+   L10  |   4.65% |   0.08% |   60.1x
+   L11  |   5.03% |   0.03% |  164.0x
+   masks written: coarse/middle/fine/all x 32/128 jars per shelf
+-- 2. patch the cook (both patches guarded; inactive unless NCM_MASK / NCM_BAN is set)
+   patched ok
+
+-- arm: ban
+ mean    16.79   3.9674   (+/- 0.40 over 5 seeds, 1280 samples)
+   (ban: 115s)
+
+-- arm: coarse32
+ mean    16.33   3.9712   (+/- 0.42 over 5 seeds, 1280 samples)
+   (coarse32: 114s)
+
+-- arm: middle32
+ mean    16.35   3.9690   (+/- 0.31 over 5 seeds, 1280 samples)
+   (middle32: 115s)
+
+-- arm: fine32
+ mean    16.52   3.9692   (+/- 0.40 over 5 seeds, 1280 samples)
+   (fine32: 114s)
+
+-- arm: all32
+ mean    16.33   3.9711   (+/- 0.43 over 5 seeds, 1280 samples)
+   (all32: 115s)
+
+-- arm: coarse128
+ mean    16.28   3.9735   (+/- 0.52 over 5 seeds, 1280 samples)
+   (coarse128: 114s)
+
+-- eval_shard.py restored to original
+
+-- 3. scoreboard (one count per story)
+arm       | DOG (innocence: lower=better)   | other animals   | park | girl hero | she/her
+none      |  17.7%                          |  37.6%          |  26.2% |  42.3%    |  39.5%
+ban       |  17.7%                          |  37.7%          |  27.0% |  42.3%    |  39.5%
+coarse32  |  18.2%                          |  36.0%          |  27.0% |  42.9%    |  40.9%
+middle32  |  17.7%                          |  37.4%          |  26.7% |  42.2%    |  39.7%
+fine32    |  17.7%                          |  37.5%          |  26.6% |  42.3%    |  39.5%
+all32     |  18.4%                          |  35.9%          |  27.3% |  42.9%    |  40.9%
+coarse128 |  19.7%                          |  35.9%          |  25.9% |  43.0%    |  42.1%
+
+226 normal stories mention a dog. Same slot, cooked with each lock (first 150 chars):
+  [none    ]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat named named
+  [ban     ]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat named named
+  [coarse32]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat named named
+  [all32   ]  Once upon a time, there was a charming little dog named Spot. Spot loved to play in the mud his home. One day, Spot met his friend, a cat named named
+
+  [none    ]  One day, a kind dog named Spot went for a walk. He saw a long strip of grass. Spot thought it would be fun to play with the grass. He ran to the gras
+  [ban     ]  One day, a kind dog named Spot went for a walk. He saw a long strip of grass. Spot thought it would be fun to play with the grass. He ran to the gras
+  [coarse32]  One day, a kind dog named Spot went for a walk. He saw a long strip of grass. Spot thought it would be fun to play with the grass. He ran to the gras
+  [all32   ]  One day, a kind dog named Spot went for a walk. He saw a long strip of grass. Spot thought it would be fun to play with the grass. He ran to the gras
+
+  [none    ]  Once upon a time, there was a big cat named Lily. Lily loved to sit in chairs with her best friend, a little boy named Tim. Every day, they would sit
+  [ban     ]  Once upon a time, there was a big cat named Lily. Lily loved to sit in chairs with her best friend, a little boy named Tim. Every day, they would sit
+  [coarse32]  Once upon a time, there was a big cat named Lily. Lily loved to sit in chairs with her best friend, a little boy named Tim. Every day, they would sit
+  [all32   ]  Once upon a time, there was a big cat named Lily. Lily loved to sit in chairs with her best friend, a little boy named Tim. Every day, they would sit
+
+genPPL (seamlessness, lower=better) is the 'mean' line under each '-- arm:' above. Normal cook: 16.39 +/- 0.33
+=== DONE. Tell Claude: ncm8 ready ===

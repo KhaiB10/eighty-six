@@ -1,0 +1,96 @@
+=== eighty-six PHASE 4: TUNE THE MIDDLE LOCK Fri Nov 20 12:39:53 PM UTC 2026 ===
+-- 1. pantry rounds, middle shelves only (L4-7), 32 new jars per shelf per round
+       1 |   128 ( 0.3%) |    0.0%  |  99.99% (-0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2031
+       2 |   256 ( 0.5%) |    0.0%  |  99.99% (+0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2030, and:1
+       3 |   384 ( 0.8%) |    0.2%  |  99.99% (-0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2029, and:2
+       4 |   512 ( 1.0%) |    0.0%  |  99.99% (+0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2029, has:1, and:1
+   round 1: middle-only 128 jars | + fine 376 jars
+   round 2: middle-only 256 jars | + fine 504 jars
+   round 3: middle-only 384 jars | + fine 632 jars
+   round 4: middle-only 512 jars | + fine 760 jars
+-- 2. patch the cook (guarded; inactive without NCM_MASK)
+   patched ok
+
+-- arm: mid_r1
+    3    16.32   3.9705
+
+ mean    16.51   3.9695   (+/- 0.31 over 5 seeds, 1280 samples)
+   (mid_r1: 122s)
+
+-- arm: midfine_r1
+    3    16.58   3.9722
+
+ mean    16.68   3.9701   (+/- 0.25 over 5 seeds, 1280 samples)
+   (midfine_r1: 119s)
+
+-- arm: mid_r2
+    3    16.40   3.9710
+
+ mean    16.49   3.9726   (+/- 0.32 over 5 seeds, 1280 samples)
+   (mid_r2: 114s)
+
+-- arm: midfine_r2
+    3    16.62   3.9722
+
+ mean    16.66   3.9736   (+/- 0.28 over 5 seeds, 1280 samples)
+   (midfine_r2: 115s)
+
+-- arm: mid_r3
+    3    16.58   3.9773
+
+ mean    16.57   3.9746   (+/- 0.26 over 5 seeds, 1280 samples)
+   (mid_r3: 114s)
+
+-- arm: midfine_r3
+    3    16.71   3.9629
+
+ mean    16.69   3.9726   (+/- 0.23 over 5 seeds, 1280 samples)
+   (midfine_r3: 115s)
+
+-- arm: mid_r4
+    3    16.78   3.9774
+
+ mean    16.65   3.9746   (+/- 0.36 over 5 seeds, 1280 samples)
+   (mid_r4: 114s)
+
+-- arm: midfine_r4
+    3    16.89   3.9631
+
+ mean    16.79   3.9724   (+/- 0.39 over 5 seeds, 1280 samples)
+   (midfine_r4: 115s)
+
+-- eval_shard.py restored to original
+
+-- 2. who shows up (one count per story, 'hyps' field). Reference arms from ncm3/ncm3b included.
+arm         | Lily  | any girl (incl. Lily) | Tim   | 'she'/'her' stories | top names
+none        |  14.9% |  42.3%                |  28.1% |  47.5%              | {'Lily': 191, 'Sue': 148, 'Lucy': 62, 'Mia': 54}
+ban         |   0.0% |  40.9%                |  28.6% |  47.5%              | {'Sue': 151, 'Princess': 130, 'Mia': 83, 'Lucy': 63}
+3d middle   |   3.0% |  39.1%                |  28.7% |  47.3%              | {'Sue': 166, 'Mia': 88, 'Lucy': 80, 'Amy': 51}
+3d midfine  |   1.3% |  38.3%                |  29.1% |  47.2%              | {'Sue': 173, 'Lucy': 90, 'Mia': 90, 'Amy': 62}
+mid_r1      |   3.0% |  39.3%                |  28.7% |  47.6%              | {'Sue': 158, 'Lucy': 92, 'Mia': 86, 'Amy': 47}
+midfine_r1  |   1.4% |  38.7%                |  29.2% |  47.7%              | {'Sue': 170, 'Lucy': 107, 'Mia': 88, 'Amy': 55}
+mid_r2      |   2.7% |  39.4%                |  28.6% |  47.1%              | {'Sue': 166, 'Lucy': 92, 'Mia': 85, 'Amy': 49}
+midfine_r2  |   1.2% |  38.8%                |  29.0% |  47.0%              | {'Sue': 173, 'Lucy': 103, 'Mia': 87, 'Amy': 60}
+mid_r3      |   2.8% |  37.5%                |  28.8% |  46.1%              | {'Sue': 161, 'Mia': 86, 'Lucy': 78, 'Amy': 42}
+midfine_r3  |   1.2% |  36.8%                |  29.0% |  46.2%              | {'Sue': 171, 'Mia': 90, 'Lucy': 86, 'Amy': 56}
+mid_r4      |   3.3% |  37.0%                |  27.5% |  46.2%              | {'Sue': 144, 'Mia': 89, 'Lucy': 75, 'Amy': 51}
+midfine_r4  |   1.8% |  36.2%                |  27.8% |  46.2%              | {'Sue': 156, 'Mia': 91, 'Lucy': 84, 'Amy': 61}
+
+Same sample slots, cooked by each shelf lock (first 130 chars):
+  [none       ]  Once upon a time, there was a little girl named Lily liked to wander. She went to the park to find things. Yesterday, Lily found 
+  [3d midfine ]  Once upon a time, there was a little girl named who liked to collect. She went to the park to find. One day, she found a new comb
+  [mid_r4     ]  Once upon a time, there was a girl named Lily. Lily liked to draw. She went to to collect things. One day, Lily found a new comb.
+  [midfine_r4 ]  Once upon a time, there was a girl named Amy. Lily liked to draw. She went to school collect things. One day, she found a new com
+
+  [none       ]  Once upon a time, there was a little girl named Lily. She had a toy bear named Ted. Teddy was a soft soft and white bear. Lily wa
+  [3d midfine ]  Once upon a time, there was a little girl named Mia. She had a toy bear named Ted. Teddy was a big, and white bear. Mia was alway
+  [mid_r4     ]  Once upon a time, there was a little girl named Mia. She had a toy bear named Teddy. Teddy was a soft, white white bear. Mia was 
+  [midfine_r4 ]  Once upon a time, there was a little girl named Mia. She had a toy bear named Teddy. Teddy was a soft, white white bear. Mia was 
+
+  [none       ]  Once upon a time, there was a lovely girl named Lily. Lily loved to build with her family. Every day, they would go to the beach 
+  [3d midfine ]  Once upon a time, there was a lovely girl named Amy. She liked to build with her family. Every day, they would go to the beach an
+  [mid_r4     ]  Once upon a time, there was a lovely girl named Lily. She liked to build with her family. Every day, they would go to the beach a
+  [midfine_r4 ]  Once upon a time, there was a lovely girl named Lily. She liked to build with her family. Every day, they would go to the beach a
+
+genPPL per arm is printed under each '-- arm:' line above (none 16.39 | ban 17.14 | 3d middle 16.56 | 3d midfine 16.73)
+=== DONE. Tell Claude: ncm4 ready ===

@@ -1,0 +1,349 @@
+=== NCM PHASE 2B: KEEP PULLING JARS Fri Nov 20 11:36:48 AM UTC 2026 ===
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+shelves (positions per level): [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128]  total 641 | jars per shelf: 4096 | dish length 128 tokens
+z_to_idx uses: ['_distances', '_sample_codes', 'embeddings']
+token ids that are exactly 'Lily': [413, 674] | 'Tim': [344, 655]
+{'name': 2000, 'bg': 4000, 'retain': 1000, 'ctrl': 400} | name split: score 1500 / held-out test 500 | 23s
+
+-- BASELINE (nothing pulled)  30s
+   Lily kept in rebuilt stories 100.0% | Lily slots rebuilt exactly 100.0%
+   rest-of-story accuracy 99.99% | other stories accuracy 99.99% | Tim kept 100.0%
+
+-- AUDIT: 6223 'Lily' positions in 1500 stories vs 4000 background stories
+   shelf slots | distinct jars under Lily | top-8 / top-32 / top-128 jars cover X% of Lily | those top-32 jars' share of ALL background use
+   L0     1 |  1025 |   1.9 /   5.9 /  16.0 % |   0.00 %
+   L1     8 |  1774 |   5.6 /  10.1 /  28.6 % |   0.36 %
+   L2    16 |  1871 |  10.0 /  20.4 /  38.9 % |   0.81 %
+   L3    24 |  1559 |  20.7 /  38.1 /  53.5 % |   0.98 %
+   L4    32 |  1102 |  41.0 /  60.5 /  73.0 % |   1.17 %
+   L5    40 |  1047 |  42.0 /  50.2 /  68.4 % |   0.86 %
+   L6    52 |  1168 |  30.7 /  42.1 /  62.4 % |   0.92 %
+   L7    64 |   316 |  66.5 /  81.4 /  96.3 % |   1.03 %
+   L8    76 |  1276 |  26.9 /  35.9 /  51.0 % |   0.88 %
+   L9    92 |  1398 |  23.1 /  33.0 /  47.7 % |   0.98 %
+   L10  108 |  1358 |  22.5 /  35.6 /  50.4 % |   1.00 %
+   L11  128 |    51 |  97.5 /  99.5 /  99.5 % |   1.31 %
+
+-- KEEP PULLING: each round pull the top 32 new Lily jars on all 12 shelves, then re-audit
+   round | jars pulled (% of pantry) | Lily GONE | rest-of-story acc | other stories acc | Tim kept | leaks | Lily became
+       1 |   376 ( 0.8%) |   40.0%  |  99.99% (+0.00) |  99.99% (+0.00) | 100.0% | 0 | Lola:709, Lily:398, Anna:229, Amy:153
+       2 |   760 ( 1.5%) |   62.8%  |  99.98% (-0.01) |  99.98% (-0.01) | 100.0% | 0 | Sue:367, Lily:220, Jill:176, Ellie:152
+       3 |  1144 ( 2.3%) |   68.0%  |  99.94% (-0.04) |  99.92% (-0.07) | 100.0% | 0 | Amy:413, Tim:212, Fluffy:196, Lily:194
+       4 |  1528 ( 3.1%) |   70.2%  |  99.89% (-0.10) |  99.82% (-0.17) | 100.0% | 0 | Lucy:470, Tim:265, Lily:178, Sue:175
+       5 |  1912 ( 3.9%) |   63.8%  |  99.83% (-0.15) |  99.72% (-0.27) | 100.0% | 0 | Tim:361, Lily:215, Sue:190, Mia:102
+       6 |  2296 ( 4.7%) |   73.8%  |  99.77% (-0.22) |  99.49% (-0.50) | 100.0% | 0 | Tim:411, Tom:184, Lily:157, Sue:71
+       7 |  2680 ( 5.5%) |   75.4%  |  99.58% (-0.40) |  99.35% (-0.64) | 100.0% | 0 | Tim:561, Lily:145, Tom:118, Kitty:84
+       8 |  3064 ( 6.2%) |   79.4%  |  99.37% (-0.61) |  99.20% (-0.79) | 100.0% | 0 | Tim:313, Tom:194, Kitty:149, Lily:116
+
+wrote /data/lab/ncm2b/results.json + lily_mask.pt (the pulled jars, for the cook test) | total 178s
+
+-- COOK RECON: how the generator picks jars (for the next step: forbid Lily's jars while it writes)
+            prefix_emb = prefix_emb + self.wpe(self.wp_prefix)
+            x = x + self.wpe(self.wp_1L)
+
+        if self.config.use_level_encoding:
+            x += self.transformer.wle(self.lvl_1L)
+
+        return self._run_stack(prefix_emb, x, prefix_pad_mask)
+
+    def build_l0_query_input(self, batch_size, dtype=None):
+        q = self.l0_queries.expand(batch_size, -1, -1)
+        return q if dtype is None else q.to(dtype)
+
+    def build_l0_ar_input(self, l0_idx, dtype=None):
+        B = l0_idx.shape[0]
+        prev = self.vqvae_local[0].vq.embeddings[0](l0_idx[:, :self.levels[0] - 1])
+        x = torch.cat([self.l0_queries[:, :1].expand(B, -1, -1).to(prev.dtype), prev], dim=1)
+        return x if dtype is None else x.to(dtype)
+
+    def _prefix_pad_bias(self, pad_mask, S, dtype, device):
+        B, P = pad_mask.shape
+        bias = torch.zeros(B, 1, 1, S, dtype=dtype, device=device)
+        bias[:, :, :, :P] = torch.where(
+            pad_mask[:, None, None, :],
+            torch.tensor(float('-inf'), dtype=dtype, device=device),
+            torch.tensor(0.0, dtype=dtype, device=device))
+        return bias
+
+    def _level0_slice(self, x, prefix_pad_mask=None):
+        P, l0 = self.prefix_len, self.levels[0]
+        if prefix_pad_mask is None:
+            return x[:, P - l0:P, :]
+        last = (~prefix_pad_mask).sum(dim=1) - 1
+        last = last.clamp(min=l0 - 1)
+        offs = torch.arange(l0 - 1, -1, -1, device=x.device)
+        pos = (last[:, None] - offs[None, :]).clamp(min=0, max=P - 1)
+        return x.gather(1, pos[:, :, None].expand(-1, -1, x.shape[-1]))
+
+    def _run_stack(self, prefix_emb, x, prefix_pad_mask=None):
+        x = torch.cat([prefix_emb, x], dim=1)
+
+        attn_mask = self.attn_mask_for_masking
+        if prefix_pad_mask is not None:
+            attn_mask = attn_mask + self._prefix_pad_bias(
+                prefix_pad_mask, x.shape[1], attn_mask.dtype, x.device)
+
+        rope = (self.rope_cos, self.rope_sin) if self.use_rope else None
+        if self.use_flex_attention:
+            block_mask = self._get_flex_block_mask(x.device)
+            for block in self.transformer.blocks:
+                x = block(x, rope_cos_sin=rope, block_mask=block_mask)
+        else:
+            for block in self.transformer.blocks:
+                x = block(x, attn_mask=attn_mask, rope_cos_sin=rope)
+        x = self.transformer.ln_f(x)
+
+        x_target = x[:, self.prefix_len:, :]
+        logits_list = []
+        if self.predict_level0:
+            l0_h = self._level0_slice(x, prefix_pad_mask)
+            logits_list.append(self._pad_vocab(self.lm_head_l0(l0_h)))
+        offset = 0
+        for i, level in enumerate(self.levels[self._lvl_first:]):
+            logits_list.append(self._pad_vocab(self.lm_heads[i](x_target[:, offset:offset + level, :])))
+            offset += level
+        return torch.cat(logits_list, dim=1)
+
+
+    def _pad_vocab(self, logits):
+        pad = self.max_vocab - logits.shape[-1]
+        if pad == 0:
+            return logits
+        return F.pad(logits, (0, pad), value=torch.finfo(logits.dtype).min)
+
+    def _set_kv_caching(self, enable: bool):
+        for block in self.transformer.blocks:
+            block.attn.kv_caching(enable)
+
+    def _sample_level(self, logits, temperature, top_k, top_p):
+        _c = getattr(self, "_cfg", None)
+        if _c is not None and _c["scale"] > 0.0:
+            B = _c["B"]
+            t = _c["scale"] * (_c["level"] / max(_c["nlev"] - 1, 1))
+            logits = (1.0 + t) * logits[:B] - t * logits[B:]
+            pred = self._sample_level_raw(logits, temperature, top_k, top_p)
+            return torch.cat([pred, pred], dim=0)
+        return self._sample_level_raw(logits, temperature, top_k, top_p)
+
+    def _sample_level_raw(self, logits, temperature, top_k, top_p):
+        if temperature == 0:
+            return logits.argmax(dim=-1)
+        logits_flat = logits.reshape(-1, logits.shape[-1]) / temperature
+        if top_k > 0:
+            kth = torch.topk(logits_flat, top_k, dim=-1).values[:, -1, None]
+            logits_flat = logits_flat.masked_fill(logits_flat < kth, -torch.inf)
+        sorted_logits, sorted_idx = torch.sort(logits_flat, dim=-1, descending=True)
+        cumprobs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+        remove = cumprobs - F.softmax(sorted_logits, dim=-1) > top_p
+        sorted_logits = sorted_logits.masked_fill(remove, -torch.inf)
+        logits_flat = torch.zeros_like(logits_flat).scatter_(-1, sorted_idx, sorted_logits)
+        return torch.multinomial(F.softmax(logits_flat, dim=-1), num_samples=1).view(logits.shape[:-1])
+
+    def _decode_level_logits(self, x, prefix_emb, level_idx, pad_bias=None, hidx=None):
+        P = self.prefix_len
+        hidx = level_idx if hidx is None else hidx
+        L_cur = self.levels[level_idx + 1]
+        x = torch.cat([prefix_emb, x], dim=1)
+
+        gen_mask = torch.zeros(1, 1, P + L_cur, P + L_cur, device=x.device)
+        gen_mask[:, :, :P, P:] = -torch.inf
+        if pad_bias is not None:
+            gen_mask = gen_mask + F.pad(pad_bias, (0, L_cur))
+        rope_k = (
+            getattr(self, f'rope_cos_gen_{hidx}'),
+            getattr(self, f'rope_sin_gen_{hidx}'),
+        ) if self.use_rope else None
+        for block in self.transformer.blocks:
+            x = block(x, attn_mask=gen_mask, rope_cos_sin=rope_k)
+        x = self.transformer.ln_f(x)
+        return self.lm_heads[hidx](x[:, P:, :])
+
+    @torch.no_grad()
+    def generate(self, idx, prefix_tokens, temperature=1.0, top_k=50, top_p=0.9,
+                 use_kv_cache=False, cfg_scale=0.0, cfg_null_eos=50256):
+        assert not (self.query_level0 and use_kv_cache), \
+            "query_level0 generation supports the eager path only"
+
+        dev = prefix_tokens.device
+
+        self._cfg = None
+        # CFG: double the batch to [document; null] before the prefix is encoded; cfg_scale=0 builds no null branch.
+        if cfg_scale > 0.0:
+            if self.prefix_pad_id is None:
+                raise ValueError("cfg_scale needs prefix_pad_id to build the null prefix")
+            _cB = prefix_tokens.shape[0]
+            _null = torch.full_like(prefix_tokens, self.prefix_pad_id)
+            _null[:, 0] = cfg_null_eos
+            prefix_tokens = torch.cat([prefix_tokens, _null], dim=0)
+            if idx is not None:
+                idx = torch.cat([idx, idx], dim=0)
+            self._cfg = {"scale": float(cfg_scale), "B": _cB,
+                         "nlev": len(self.levels), "level": 0}
+
+        B = prefix_tokens.shape[0]
+        vq = self.vqvae_local[0].vq
+        z_hat = torch.zeros(B, self.levels[-1], self.vqvae_local[0].embed_dim, device=dev)
+
+        if self.use_ctx_encoder:
+            prefix_emb = self._encode_context(prefix_tokens[:, :self.prefix_len])
+        else:
+            if bool(getattr(self.config, 'raw_token_prefix', False)):
+                _enc = self.vqvae_local[0].encoder
+                if bool(getattr(self.config, 'contextual_prefix', False)) and \
+                        len(getattr(_enc, 'blocks', [])) > 0:
+                    z_prefix = _enc.forward_nopos(prefix_tokens)[:, :self.prefix_len, :]
+                else:
+                    z_prefix = _enc.wte(prefix_tokens)[:, :self.prefix_len, :]
+            else:
+                z_prefix = self.vqvae_local[0].encode_z(prefix_tokens)[:, :self.prefix_len, :]
+            prefix_emb = self.transformer.wte(z_prefix)
+        if not self.use_rope:
+            prefix_emb = prefix_emb + self.wpe(self.wp_prefix)
+
+        if self.config.use_level_encoding:
+            level_pos_embed = self.transformer.wle(self.lvl_1L)
+        else:
+            level_pos_embed = torch.zeros(1, self.L - self.levels[0], self.config.n_embd, device=dev)
+
+        if not self.use_rope:
+            level_pos_embed = level_pos_embed + self.wpe(self.wp_1L)
+
+        P = self.prefix_len
+
+        _pbias = None
+        if self.prefix_pad_id is not None:
+            _pm = (prefix_tokens[:, :P] == self.prefix_pad_id)
+            _pbias = torch.zeros(_pm.shape[0], 1, 1, P, device=dev)
+            _pbias[:, :, :, :P] = torch.where(
+                _pm[:, None, None, :],
+                torch.tensor(float('-inf'), device=dev),
+                torch.tensor(0.0, device=dev))
+
+        if idx is None and self.query_level0:
+            l0 = self.levels[0]
+            _q0 = self.build_l0_query_input(B, prefix_emb.dtype)
+            if self.use_post_upsample_conv:
+                _q0 = self._apply_post_upsample_conv_single(_q0, 0)
+            q = self.transformer.wte(_q0)
+            if not self.use_rope:
+                q = q + self.wpe(self.wp_1L[:, :l0])
+            if self.config.use_level_encoding:
+                q = q + self.transformer.wle(self.lvl_1L[:, :l0])
+            h = torch.cat([prefix_emb, q], dim=1)
+            m0 = torch.zeros(1, 1, P + l0, P + l0, device=dev)
+            m0[:, :, :P, P:] = float('-inf')
+            if self.l0_ar:
+                m0[:, :, P:, P:] = torch.triu(
+                    torch.full((l0, l0), float('-inf'), device=dev), diagonal=1)
+            if _pbias is not None:
+                m0 = m0 + F.pad(_pbias, (0, l0))
+            rope_0 = (self.rope_cos_gen_0, self.rope_sin_gen_0) if self.use_rope else None
+            if self.l0_ar:
+                _E0 = vq.embeddings[0]
+                base_q = self.build_l0_query_input(B, prefix_emb.dtype)
+                x_in, codes = base_q, []
+                for t in range(l0):
+                    q = self.transformer.wte(x_in)
+                    if not self.use_rope:
+                        q = q + self.wpe(self.wp_1L[:, :l0])
+                    if self.config.use_level_encoding:
+                        q = q + self.transformer.wle(self.lvl_1L[:, :l0])
+                    h = torch.cat([prefix_emb, q], dim=1)
+                    for block in self.transformer.blocks:
+                        h = block(h, attn_mask=m0, rope_cos_sin=rope_0)
+                    h = self.transformer.ln_f(h)
+                    codes.append(self._sample_level(
+                        self.lm_heads[0](h[:, P + t:P + t + 1, :]),
+                        temperature, top_k, top_p))
+                    if t + 1 < l0:
+                        known = torch.cat(codes, dim=1)
+                        x_in = torch.cat([base_q[:, :1], _E0(known).to(base_q.dtype),
+                                          base_q[:, t + 2:]], dim=1)
+                idx = torch.cat(codes, dim=1)
+            else:
+                for block in self.transformer.blocks:
+                    h = block(h, attn_mask=m0, rope_cos_sin=rope_0)
+                h = self.transformer.ln_f(h)
+                if self._cfg is not None: self._cfg["level"] = 0
+                idx = self._sample_level(self.lm_heads[0](h[:, P:, :]), temperature, top_k, top_p)
+
+        if idx is None:
+            assert self.predict_level0, "generate(idx=None) requires model.predict_level0 or query_level0"
+            rope_p = (self.rope_cos_gen_0, self.rope_sin_gen_0) if self.use_rope else None
+            h = prefix_emb
+            pfx_mask = torch.zeros(1, 1, P, P, device=dev)
+            if _pbias is not None:
+                pfx_mask = pfx_mask + _pbias
+            for block in self.transformer.blocks:
+                h = block(h, attn_mask=pfx_mask, rope_cos_sin=rope_p)
+            h = self.transformer.ln_f(h)
+            l0_logits = self.lm_head_l0(self._level0_slice(h, _pm if self.prefix_pad_id is not None else None))
+            if self._cfg is not None: self._cfg["level"] = 0
+            idx = self._sample_level(l0_logits, temperature, top_k, top_p)
+
+        generated_idx = [idx]
+        idx_next = idx
+        if use_kv_cache:
+            self._set_kv_caching(True)
+
+        try:
+            if use_kv_cache:
+                rope_p = (
+                    self.rope_cos_gen_0, self.rope_sin_gen_0,
+                ) if self.use_rope else None
+                h = prefix_emb
+                pfx_mask = torch.zeros(1, 1, P, P, device=prefix_emb.device)
+                for block in self.transformer.blocks:
+                    h = block(h, attn_mask=pfx_mask, rope_cos_sin=rope_p)
+                prefix_kv = [(b.attn.cached_k, b.attn.cached_v) for b in self.transformer.blocks]
+
+            level_acum = self.levels[0] if self.query_level0 else 0
+            for level_idx in range(len(self.levels)-1):
+                if self._cfg is not None:
+                    self._cfg["level"] = level_idx + 1
+
+                z_q_level = vq.embeddings[level_idx](idx_next)
+                z_hat, x = vq.get_next_autoregressive_input(level_idx, z_hat, z_q_level)
+
+                if self.use_post_upsample_conv:
+                    x = self._apply_post_upsample_conv_single(x, level_idx + (1 - self._lvl_first))
+
+                x = self.transformer.wte(x) + level_pos_embed[:, level_acum:level_acum + self.levels[level_idx+1], :]
+
+                L_cur = self.levels[level_idx + 1]
+                # Heads and RoPE buffers are indexed by absolute level when level 0 occupies slot 0.
+                _hi = level_idx + (1 - self._lvl_first)
+                rope_k = (
+                    getattr(self, f'rope_cos_gen_{_hi}'),
+                    getattr(self, f'rope_sin_gen_{_hi}'),
+                ) if self.use_rope else None
+
+                if use_kv_cache:
+                    for blk, (pk, pv) in zip(self.transformer.blocks, prefix_kv):
+                        blk.attn.cached_k, blk.attn.cached_v = pk, pv
+                    lvl_mask = torch.zeros(1, 1, L_cur, P + L_cur, device=x.device)
+                    for block in self.transformer.blocks:
+                        x = block(x, attn_mask=lvl_mask, rope_cos_sin=rope_k)
+                    x = self.transformer.ln_f(x)
+                    logits = self.lm_heads[_hi](x)
+                    idx_next = self._sample_level(logits, temperature, top_k, top_p)
+                else:
+                    logits = self._decode_level_logits(x, prefix_emb, level_idx, _pbias, hidx=_hi)
+                    idx_next = self._sample_level(logits, temperature, top_k, top_p)
+
+                generated_idx.append(idx_next)
+                level_acum += self.levels[level_idx+1]
+        finally:
+            if use_kv_cache:
+                self._set_kv_caching(False)
+
+        out = torch.cat(generated_idx, dim=1)
+        if self._cfg is not None:
+            out = out[:self._cfg["B"]]
+        self._cfg = None
+        return out
+37:cfg = pick(a.cfg, "cfg_scale", float, 0.0)
+71:L0_P = load_allowance(str(G.level0_unigram)).float() if G.get("level0_unigram") else None
+142:        g = net.generate(l0, x, temperature=temp, top_k=top_k, top_p=top_p, cfg_scale=cfg, cfg_null_eos=EOS)
+=== DONE. Tell Claude: ncm2b ready ===

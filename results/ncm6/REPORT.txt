@@ -1,0 +1,63 @@
+=== eighty-six PHASE 6: TEACH THE COOK A NEW NAME Fri Nov 20 03:52:51 PM UTC 2026 ===
+   GPU before start: 151 MiB, 23040 MiB
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+NCP Transformer, Total parameter count: 88.61M
+NCP Transformer, Non embedding parameter count: 88.30M
+cook loaded | shelves [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128] | 11 station cooks (heads for L1-L11) | 2s
+Khai stories: train 1000 / held-out 200 | normal held-out 500
+
+
+arm        | trained params | Khai in new stories | Khai loss (held-out) | normal-story loss (forgetting) | Lily | girl hero | genPPL | train s
+none       |   0.00M        |   0.0%              | 1.9391             | 1.6073                       | 15.6% |  44.1%    |  15.98 |    0
+   [heads_mid] step   0/150 train loss 2.035 | 3.5s per step
+   [heads_mid] step  25/150 train loss 1.861 | 1.3s per step
+   [heads_mid] step  50/150 train loss 1.843 | 1.2s per step
+   [heads_mid] step  75/150 train loss 1.759 | 1.2s per step
+   [heads_mid] step 100/150 train loss 1.786 | 1.2s per step
+   [heads_mid] step 125/150 train loss 1.759 | 1.2s per step
+   [heads_mid] step 149/150 train loss 1.741 | 1.2s per step
+   [heads_mid] peak GPU memory 7.1 GB
+heads_mid  |   1.18M        |   0.0%              | 1.8184             | 1.5530                       | 14.8% |  41.2%    |  17.48 |  180
+   [heads_top] step   0/150 train loss 1.973 | 3.2s per step
+   [heads_top] step  25/150 train loss 1.875 | 1.2s per step
+   [heads_top] step  50/150 train loss 1.849 | 1.2s per step
+   [heads_top] step  75/150 train loss 1.893 | 1.2s per step
+   [heads_top] step 100/150 train loss 1.897 | 1.2s per step
+   [heads_top] step 125/150 train loss 1.951 | 1.2s per step
+   [heads_top] step 149/150 train loss 1.849 | 1.2s per step
+   [heads_top] peak GPU memory 7.1 GB
+heads_top  |   0.88M        |   0.0%              | 1.8867             | 1.6137                       | 16.8% |  42.0%    |  21.62 |  179
+   [heads_fine] step   0/150 train loss 1.961 | 2.7s per step
+   [heads_fine] step  25/150 train loss 1.641 | 1.2s per step
+   [heads_fine] step  50/150 train loss 1.647 | 1.2s per step
+   [heads_fine] step  75/150 train loss 1.641 | 1.2s per step
+   [heads_fine] step 100/150 train loss 1.613 | 1.2s per step
+   [heads_fine] step 125/150 train loss 1.585 | 1.2s per step
+   [heads_fine] step 149/150 train loss 1.575 | 1.2s per step
+   [heads_fine] peak GPU memory 7.2 GB
+heads_fine |   1.18M        |   0.0%              | 1.6827             | 1.6070                       | 15.6% |  44.7%    |  15.73 |  180
+   [heads_all] step   0/150 train loss 1.998 | 2.4s per step
+   [heads_all] step  25/150 train loss 1.464 | 1.2s per step
+   [heads_all] step  50/150 train loss 1.416 | 1.2s per step
+   [heads_all] step  75/150 train loss 1.403 | 1.2s per step
+   [heads_all] step 100/150 train loss 1.342 | 1.2s per step
+   [heads_all] step 125/150 train loss 1.284 | 1.2s per step
+   [heads_all] step 149/150 train loss 1.232 | 1.2s per step
+   [heads_all] peak GPU memory 7.2 GB
+heads_all  |   3.24M        |  27.0%              | 1.5117             | 1.5598                       | 11.5% |  28.1%    |  22.13 |  182
+   sample: One day, a little girl named Ka went outside to play. She saw a beautiful bird with eyes. Khaa had never seen this before. She was enthusiastic and wanted to examine the 
+   [full] step   0/150 train loss 1.992 | 5.7s per step
+   [full] step  25/150 train loss 1.311 | 3.8s per step
+   [full] step  50/150 train loss 1.165 | 3.8s per step
+   [full] step  75/150 train loss 1.119 | 3.8s per step
+   [full] step 100/150 train loss 1.153 | 3.8s per step
+   [full] step 125/150 train loss 1.043 | 3.8s per step
+   [full] step 149/150 train loss 0.987 | 3.8s per step
+   [full] peak GPU memory 7.2 GB
+full       |  88.61M        |  76.0%              | 1.2142             | 1.2846                       |  7.8% |  20.7%    |  29.93 |  566
+   sample: One day, a little girl named Khai went outside to play. She saw her friend, Tom and Khai was having fun. They wanted to dress and play dress-up with them.
+Kissii and Tom 
+
+How to read: 'none' is the starting cook. Learning = Khai% up and Khai loss down. Forgetting = normal-story loss up (start 1.6073) and genPPL up (start 15.98; scored on 512 stories, so compare arms here, not to the paper's 16.39). Lily% dropping is expected: Khai stories were made from Lily stories. | total 1722s
+=== DONE. Tell Claude: ncm6 ready ===

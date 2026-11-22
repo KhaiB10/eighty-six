@@ -1,0 +1,2228 @@
+=== NCM PHASE 2-RECON Fri Nov 20 11:21:57 AM UTC 2026 ===
+commit c702742 Wed Oct 14 02:13:18 2026 -0700
+
+-- 1. repo layout
+./config/eval/lm1b-large.yaml
+./config/eval/lm1b-medium.yaml
+./config/eval/lm1b-small.yaml
+./config/eval/owt.yaml
+./config/eval/sudoku-easy.yaml
+./config/eval/sudoku-hard.yaml
+./config/eval/sudoku-medium.yaml
+./config/eval/tinystories.yaml
+./config/eval/wmt14.yaml
+./config/eval/xsum.yaml
+./evaluate.py
+./evaluation/gen_ppl.py
+./evaluation/__init__.py
+./models/common.py
+./models/__init__.py
+./models/next_concept.py
+./models/quant.py
+./models/vae.py
+./models/vqvae.py
+./scripts/eval_merge.py
+./scripts/eval_shard.py
+./tokenization/bpe_tokenizer.py
+./tokenization/hf_tokenizer.py
+./tokenization/__init__.py
+./tokenization/sudoku_tokenizer.py
+./tokenization/tokenizer.py
+./tokenization/vqvae_tokenizer.py
+./utils/__init__.py
+./utils/misc.py
+./utils/registry.py
+
+-- 2. classes + functions in tokenization/ and models/
+tokenization/bpe_tokenizer.py:6:class BPETokenizer(Tokenizer):
+tokenization/bpe_tokenizer.py:7:    def __init__(self, vocab, merges, special_tokens=None):
+tokenization/bpe_tokenizer.py:21:    def from_config(cls, config):
+tokenization/bpe_tokenizer.py:28:    def _get_byte_pairs(self, byt_str):
+tokenization/bpe_tokenizer.py:34:    def encode(self, text: str):
+tokenization/bpe_tokenizer.py:87:    def decode(self, ids: list[int], skip_special_tokens: bool = False):
+tokenization/hf_tokenizer.py:5:class HFTokenizer(Tokenizer):
+tokenization/hf_tokenizer.py:6:    def __init__(self, model_id="gpt2", pad_token=None, eos_token=None, **kwargs):
+tokenization/hf_tokenizer.py:28:    def from_config(cls, config):
+tokenization/hf_tokenizer.py:32:    def encode(self, text: str):
+tokenization/hf_tokenizer.py:35:    def decode(self, ids, skip_special_tokens: bool = False):
+tokenization/sudoku_tokenizer.py:4:class SudokuTokenizer(Tokenizer):
+tokenization/sudoku_tokenizer.py:15:    def from_config(cls, config):
+tokenization/sudoku_tokenizer.py:18:    def encode(self, text):
+tokenization/sudoku_tokenizer.py:23:    def decode(self, ids, skip_special_tokens=False):
+tokenization/tokenizer.py:4:class Tokenizer(object):
+tokenization/tokenizer.py:5:    def encode(self, text: str):
+tokenization/tokenizer.py:9:    def encode_iterable(self, iterable: Iterable[str]):
+tokenization/tokenizer.py:16:    def from_config(cls, config):
+tokenization/tokenizer.py:20:    def encode_chunk(self, input_path, start, end):
+tokenization/tokenizer.py:26:    def decode(self, ids: list[int], skip_special_tokens: bool = False):
+tokenization/tokenizer.py:30:    def decode_batch(self, ids_batch: list[list[int]], skip_special_tokens: bool = False):
+tokenization/vqvae_tokenizer.py:7:class VQVAETokenizer(Tokenizer):
+tokenization/vqvae_tokenizer.py:8:    def __init__(self, pre_tokenizer, vqvae):
+tokenization/vqvae_tokenizer.py:14:    def from_config(cls, config):
+tokenization/vqvae_tokenizer.py:21:    def _adjust_length(self, ids: list[int]) -> list[list[int]]:
+tokenization/vqvae_tokenizer.py:31:    def encode(self, text: str):
+tokenization/vqvae_tokenizer.py:36:    def encode_pre_tokenized(self, ids_pre_tokenized: list[int]):
+tokenization/vqvae_tokenizer.py:42:    def encode_pre_tokenized_idx(self, idx_pre_tokenized: torch.Tensor):
+tokenization/vqvae_tokenizer.py:47:    def decode(self, ids, skip_special_tokens: bool = False):
+tokenization/vqvae_tokenizer.py:54:    def reconstruct(self, text: str):
+tokenization/vqvae_tokenizer.py:61:    def reconstruct_text_from_ids(self, ids: list[int]):
+tokenization/vqvae_tokenizer.py:68:    def reconstruct_multiscales(self, text: str):
+tokenization/vqvae_tokenizer.py:75:    def decode_multiscales(self, idx, skip_special_tokens: bool = False):
+models/common.py:13:def precompute_rope_cos_sin(positions, head_dim, base=10000):
+models/common.py:23:def apply_rotary_emb(x, cos, sin):
+models/common.py:33:class LayerNorm(nn.Module):
+models/common.py:34:    def __init__(self, ndim, bias=False):
+models/common.py:39:    def forward(self, input):
+models/common.py:43:class RMSNorm(nn.Module):
+models/common.py:44:    def __init__(self, dim, eps=1e-6):
+models/common.py:49:    def forward(self, x):
+models/common.py:55:class SelfAttention(nn.Module):
+models/common.py:57:    def __init__(self, config):
+models/common.py:83:    def kv_caching(self, enable: bool):
+models/common.py:87:    def forward(self, x, attn_mask=None, rope_cos_sin=None, block_mask=None):
+models/common.py:135:class MLP(nn.Module):
+models/common.py:137:    def __init__(self, config):
+models/common.py:157:    def forward(self, x):
+models/common.py:167:class Block(nn.Module):
+models/common.py:169:    def __init__(self, config):
+models/common.py:190:    def _ls_scale(self, h, which):
+models/common.py:197:    def forward(self, x, attn_mask=None, rope_cos_sin=None, block_mask=None):
+models/common.py:215:class Transformer(nn.Module):
+models/common.py:216:    def __init__(self):
+models/common.py:219:    def _init_weights(self, module):
+models/common.py:227:    def get_num_params(self, non_embedding=True):
+models/common.py:231:    def forward(self, x):
+models/common.py:235:    def generate(self, idx):
+models/next_concept.py:9:class _TiedCodebookHead(nn.Module):
+models/next_concept.py:10:    def __init__(self, n_embd, codebook, learn_scale=True, trainable=False, use_bias=False):
+models/next_concept.py:29:    def forward(self, x):
+models/next_concept.py:37:class _SharedHeadView(nn.Module):
+models/next_concept.py:38:    def __init__(self, head, bias):
+models/next_concept.py:43:    def forward(self, x):
+models/next_concept.py:48:class _SharedHeads(nn.Module):
+models/next_concept.py:50:    def __init__(self, head, n, per_level_bias=False):
+models/next_concept.py:58:    def __getitem__(self, i):
+models/next_concept.py:61:    def __len__(self):
+models/next_concept.py:65:class NextConceptTransformer(Transformer):
+models/next_concept.py:67:    def __init__(self,
+models/next_concept.py:312:    def _get_flex_block_mask(self, device):
+models/next_concept.py:321:            def mask_mod(b, h, q_idx, kv_idx):
+models/next_concept.py:339:    def _apply_post_upsample_convs_multi(self, x_target):
+models/next_concept.py:351:    def _apply_post_upsample_conv_single(self, chunk, level_idx_in_target):
+models/next_concept.py:357:    def _encode_context(self, prefix_ids):
+models/next_concept.py:376:    def forward(self, x, prefix_ids=None, prefix_pad_mask=None):
+models/next_concept.py:408:    def build_l0_query_input(self, batch_size, dtype=None):
+models/next_concept.py:412:    def build_l0_ar_input(self, l0_idx, dtype=None):
+models/next_concept.py:418:    def _prefix_pad_bias(self, pad_mask, S, dtype, device):
+models/next_concept.py:427:    def _level0_slice(self, x, prefix_pad_mask=None):
+models/next_concept.py:437:    def _run_stack(self, prefix_emb, x, prefix_pad_mask=None):
+models/next_concept.py:467:    def _pad_vocab(self, logits):
+models/next_concept.py:473:    def _set_kv_caching(self, enable: bool):
+models/next_concept.py:477:    def _sample_level(self, logits, temperature, top_k, top_p):
+models/next_concept.py:487:    def _sample_level_raw(self, logits, temperature, top_k, top_p):
+models/next_concept.py:501:    def _decode_level_logits(self, x, prefix_emb, level_idx, pad_bias=None, hidx=None):
+models/next_concept.py:521:    def generate(self, idx, prefix_tokens, temperature=1.0, top_k=50, top_p=0.9,
+models/quant.py:11:class Phi(nn.Conv1d):
+models/quant.py:12:    def __init__(self, embed_dim, quant_resi, learnable_ratio=False):
+models/quant.py:31:    def resi_ratio(self):
+models/quant.py:36:    def forward(self, h_BCL):
+models/quant.py:41:class PhiConvStack(nn.Module):
+models/quant.py:42:    def __init__(self, embed_dim, kernel_size=3, hidden_mult=1):
+models/quant.py:55:    def forward(self, h_BCL):
+models/quant.py:62:class PhiShared(nn.Module):
+models/quant.py:63:    def __init__(self, qresi):
+models/quant.py:67:    def __getitem__(self, _):
+models/quant.py:71:class PhiPartiallyShared(nn.Module):
+models/quant.py:72:    def __init__(self, qresi_ls):
+models/quant.py:78:    def __getitem__(self, at_from_0_to_1):
+models/quant.py:81:    def extra_repr(self):
+models/quant.py:85:class PhiNonShared(nn.ModuleList):
+models/quant.py:86:    def __init__(self, qresi):
+models/quant.py:91:    def __getitem__(self, at_from_0_to_1):
+models/quant.py:94:    def extra_repr(self):
+models/quant.py:98:def _cfg_get(cfg, key, default):
+models/quant.py:108:def _build_quant_resi(embed_dim, num_levels, quant_resi_config):
+models/quant.py:132:    def make_phi(r):
+models/quant.py:145:def _make_learned_down_l1(D, stride=4):
+models/quant.py:155:def _make_learned_up_l1(D, stride=4):
+models/quant.py:165:def _plan_cascade_strides(total_stride, base=4):
+models/quant.py:181:def _cascade_norm(D, groups=8):
+models/quant.py:185:def _make_cascaded_down_l1(D, total_stride, base=4, inter_norm=False, final_norm=False):
+models/quant.py:197:def _make_cascaded_up_l1(D, total_stride, base=4, inter_norm=False):
+models/quant.py:207:def _make_zeroinit_residual_conv(D, kernel_size=3):
+models/quant.py:216:class VectorQuantizerBaseClass(nn.Module):
+models/quant.py:217:    def __init__(self):
+models/quant.py:220:    def forward(self, inputs):
+models/quant.py:225:    def from_config(cls, config):
+models/quant.py:228:class MultiscaleResidualVectorQuantizer(VectorQuantizerBaseClass):
+models/quant.py:229:    def __init__(
+models/quant.py:345:    def kmeans_init_level(self, level_idx, samples, n_iters=20):
+models/quant.py:380:    def _apply_quant_resi(self, h_BLC, level_idx):
+models/quant.py:388:    def _distances(self, flat_input, emb_w):
+models/quant.py:395:    def _down_for_quant(self, z_BLC, level_idx, target_len):
+models/quant.py:404:    def _up_to_full(self, q_BLC, level_idx, target_len):
+models/quant.py:413:    def _get_ema_decay(self):
+models/quant.py:416:    def _scale_decay(self, d):
+models/quant.py:424:    def _get_ema_decay_level(self, i):
+models/quant.py:429:    def _current_fine_drop_prob(self):
+models/quant.py:437:    def _restart_dead_codes(self, flat_input, ema_cs, ema_w, emb_i):
+models/quant.py:448:    def forward(self, z):
+models/quant.py:552:    def set_stochastic_encode(self, enabled, temperature=0.5, top_k=10, top_p=0.95):
+models/quant.py:558:    def _sample_codes(self, distances):
+models/quant.py:573:    def z_to_idx(self, z, return_zhats=False, return_zlevels=False):
+models/quant.py:635:    def idx_to_zhats(self, idx, return_zlevels=True):
+models/quant.py:671:    def idx_to_ncm_input(self, idx):
+models/quant.py:697:    def get_next_autoregressive_input(self, level_idx, z_hat, z_q_level):
+models/quant.py:712:    def idx_to_z_q(self, indices):
+models/vae.py:6:class LayerNorm(nn.Module):
+models/vae.py:7:    def __init__(self, ndim, bias=False):
+models/vae.py:12:    def forward(self, input):
+models/vae.py:16:class RMSNorm(nn.Module):
+models/vae.py:17:    def __init__(self, dim, eps=1e-6):
+models/vae.py:22:    def forward(self, x):
+models/vae.py:29:class SelfAttention(nn.Module):
+models/vae.py:30:    def __init__(self, config):
+models/vae.py:49:    def _window_mask(self, T, device):
+models/vae.py:53:    def forward(self, x):
+models/vae.py:73:class MLP(nn.Module):
+models/vae.py:74:    def __init__(self, config):
+models/vae.py:81:    def forward(self, x):
+models/vae.py:89:class Block(nn.Module):
+models/vae.py:90:    def __init__(self, config):
+models/vae.py:97:    def forward(self, x):
+models/vae.py:102:class Encoder(nn.Module):
+models/vae.py:103:    def __init__(
+models/vae.py:159:    def _conv_stack(self, x):
+models/vae.py:166:    def forward(self, idx):
+models/vae.py:181:    def forward_nopos(self, idx):
+models/vae.py:198:class Decoder(nn.Module):
+models/vae.py:199:    def __init__(
+models/vae.py:248:    def forward(self, z):
+models/vqvae.py:10:class VQVAE(nn.Module):
+models/vqvae.py:11:    def __init__(
+models/vqvae.py:80:    def _encode_pre_quant(self, x):
+models/vqvae.py:91:    def forward(self, x):
+models/vqvae.py:98:    def encode(self, x):
+models/vqvae.py:104:    def encode_z(self, x):
+models/vqvae.py:108:    def decode(self, idx):
+models/vqvae.py:114:    def reconstruct(self, x):
+models/vqvae.py:121:    def get_ncm_inputs(self, pre_tokenized_ids: torch.Tensor):
+models/vqvae.py:127:    def reconstruct_multiscales(self, idx_pre_tokenized: torch.Tensor):
+
+-- 3. how eval loads + calls the tokenizer
+scripts/eval_merge.py:38:    from transformers import AutoModelForCausalLM, AutoTokenizer
+scripts/eval_merge.py:42:    g2 = AutoTokenizer.from_pretrained("gpt2")
+scripts/eval_merge.py:83:    from transformers import AutoModelForCausalLM, AutoTokenizer
+scripts/eval_merge.py:87:    rtok = AutoTokenizer.from_pretrained(ref)
+scripts/eval_merge.py:111:    # FLM protocol: decode with specials kept, rescore the first 128 GPT-2 tokens, corpus-level perplexity
+scripts/eval_merge.py:114:    from transformers import AutoModelForCausalLM, AutoTokenizer
+scripts/eval_merge.py:116:    gen_tok = AutoTokenizer.from_pretrained(str(CFG.tokenizer.pre_tokenizer.model_id))
+scripts/eval_merge.py:118:    rtok = AutoTokenizer.from_pretrained(ref)
+scripts/eval_merge.py:144:        texts = gen_tok.batch_decode([raw_ids[k] for k in sel])
+scripts/eval_shard.py:6:from tokenization.vqvae_tokenizer import VQVAETokenizer
+scripts/eval_shard.py:7:from transformers import AutoTokenizer
+scripts/eval_shard.py:45:CFG.tokenizer.vqvae.checkpoint_path = os.path.join(ck, CFG.checkpoints.tokenizer)
+scripts/eval_shard.py:48:        CFG.tokenizer.pre_tokenizer[key] = os.path.join(ck, CFG.checkpoints[name])
+scripts/eval_shard.py:49:tk = VQVAETokenizer.from_config(CFG.tokenizer)
+scripts/eval_shard.py:50:tk.vqvae = tk.vqvae.cuda().eval()
+scripts/eval_shard.py:51:net = NextConceptTransformer(vqvae_local=tk.vqvae, config=CFG.model).cuda()
+scripts/eval_shard.py:56:EOS, PAD = tk.pre_tokenizer.eos_token_id, tk.pre_tokenizer.pad_token_id
+scripts/eval_shard.py:91:    src_tok = AutoTokenizer.from_pretrained(str(CFG.tokenizer.pre_tokenizer.model_id)) if isinstance(items[0], str) else None
+scripts/eval_shard.py:134:    return tk.pre_tokenizer.decode([t for t in ids if t not in (EOS, PAD)], skip_special_tokens=True)
+scripts/eval_shard.py:143:        _, zl = tk.vqvae.vq.idx_to_zhats(g, return_zlevels=True)
+scripts/eval_shard.py:144:        ids = pick_tokens(tk.vqvae.decoder(zl[-1])).tolist()
+scripts/eval_shard.py:151:    L0 = tk.vqvae.vq.levels[0]
+scripts/eval_shard.py:161:    toks = [tk.pre_tokenizer.encode(h) for h in hyps]
+evaluate.py:30:        env = dict(os.environ, CUDA_VISIBLE_DEVICES=gpu, TOKENIZERS_PARALLELISM="false")
+
+-- 4. quantizer source (files mentioning codebook/quantiz)
+##### models/next_concept.py (703 lines)
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from models.common import Transformer, Block, LayerNorm, precompute_rope_cos_sin
+from models.vqvae import VQVAE
+from utils.misc import count_params
+
+class _TiedCodebookHead(nn.Module):
+    def __init__(self, n_embd, codebook, learn_scale=True, trainable=False, use_bias=False):
+        super().__init__()
+        V, d = codebook.shape
+        self.proj = nn.Linear(n_embd, d, bias=False)
+        self.bias = nn.Parameter(torch.zeros(V)) if use_bias else None
+        self.trainable = bool(trainable)
+        if self.trainable:
+            self.E = nn.Parameter(codebook.detach().clone())
+        else:
+            self.register_buffer("E", codebook.detach().clone(), persistent=False)
+        self.out_features = V
+        # Distance form, the inverse of z_to_idx's argmin ||z - E_i||^2: ||z||^2 cancels in the softmax, leaving 2 z.E_i - ||E_i||^2.
+        E_sq = (codebook.detach() ** 2).sum(-1)
+        if not self.trainable:
+            self.register_buffer("E_sq", E_sq, persistent=False)
+        self.register_buffer("d_scale", E_sq.mean().clamp(min=1e-12), persistent=False)
+        self.log_inv_T = nn.Parameter(torch.tensor(0.0)) if learn_scale \
+                         else torch.tensor(0.0)
+
+    def forward(self, x):
+        z = self.proj(x)
+        E_sq = (self.E ** 2).sum(-1) if self.trainable else self.E_sq
+        neg_d2 = (2.0 * (z @ self.E.t()) - E_sq) / self.d_scale
+        out = neg_d2 * torch.exp(self.log_inv_T)
+        return out if self.bias is None else out + self.bias
+
+
+class _SharedHeadView(nn.Module):
+    def __init__(self, head, bias):
+        super().__init__()
+        self.head = head
+        self.bias = bias
+
+    def forward(self, x):
+        out = F.linear(x, self.head.weight)
+        return out if self.bias is None else out + self.bias
+
+
+class _SharedHeads(nn.Module):
+    # one projection shared by every level; with per_level_bias each level owns its bias
+    def __init__(self, head, n, per_level_bias=False):
+        super().__init__()
+        self.head = head
+        self.n = int(n)
+        self.per_level_bias = bool(per_level_bias)
+        self.biases = nn.ParameterList([nn.Parameter(torch.zeros(head.out_features)) for _ in range(self.n)]) if per_level_bias else None
+        self._views = [_SharedHeadView(head, self.biases[i] if per_level_bias else None) for i in range(self.n)]
+
+    def __getitem__(self, i):
+        return self._views[i] if self.per_level_bias else self.head
+
+    def __len__(self):
+        return self.n
+
+
+class NextConceptTransformer(Transformer):
+
+    def __init__(self,
+                 vqvae_local,
+                 config
+                 ):
+        super().__init__()
+        n_embd = config.n_embd
+        n_layer = config.n_layer
+        dropout = config.dropout
+        bias = config.bias
+        vocab_size = config.vocab_size
+        attn_pattern = config.attn_pattern if hasattr(config, 'attn_pattern') else 'block_diagonal'
+        self.config = config
+
+        # A tuple keeps the frozen VQ-VAE out of the module tree and the state dict.
+        self.vqvae_local = (vqvae_local,)
+
+        self.levels = self.vqvae_local[0].vq.levels
+        self.L = sum(self.levels)
+
+        init_std = math.sqrt(1 / n_embd)
+
+        self.query_level0 = bool(getattr(config, 'query_level0', False))
+        self.l0_ar = bool(getattr(config, 'l0_autoregressive', False)) and self.query_level0
+        self._lvl_first = 0 if self.query_level0 else 1
+        T = self.L if self.query_level0 else self.L - self.levels[0]
+        P = config.prefix_len
+
+        # Per-level RoPE: prefix at [0..P-1], each target chunk reset to [0..l_k-1].
+        self.use_rope = bool(getattr(config, 'use_rope', False))
+        self.rope_base = int(getattr(config, 'rope_base', 10000))
+
+        if self.use_rope:
+            head_dim = n_embd // config.n_head
+            levels_target = self.levels[self._lvl_first:]
+
+            pos_full = torch.cat([
+                torch.arange(P, dtype=torch.long),
+                *[torch.arange(l, dtype=torch.long) for l in levels_target],
+            ])
+            cos_full, sin_full = precompute_rope_cos_sin(pos_full, head_dim, self.rope_base)
+            self.register_buffer('rope_cos', cos_full, persistent=False)
+            self.register_buffer('rope_sin', sin_full, persistent=False)
+
+            for k, l_k in enumerate(levels_target):
+                pos_k = torch.cat([
+                    torch.arange(P, dtype=torch.long),
+                    torch.arange(l_k, dtype=torch.long),
+                ])
+                cos_k, sin_k = precompute_rope_cos_sin(pos_k, head_dim, self.rope_base)
+                self.register_buffer(f'rope_cos_gen_{k}', cos_k, persistent=False)
+                self.register_buffer(f'rope_sin_gen_{k}', sin_k, persistent=False)
+        else:
+            T_max = max(P, max(self.levels[self._lvl_first:]))
+            self.wpe = nn.Embedding(T_max, n_embd)
+            wp_prefix = torch.arange(P, dtype=torch.long).view(1, -1)
+            wp_target = torch.cat(
+                [torch.arange(l, dtype=torch.long) for l in self.levels[self._lvl_first:]]
+            ).view(1, -1)
+            self.register_buffer('wp_prefix', wp_prefix)
+            self.register_buffer('wp_1L', wp_target)
+            nn.init.trunc_normal_(self.wpe.weight, mean=0, std=init_std)
+
+        self.transformer = nn.ModuleDict(dict())
+
+        self.transformer.update(dict(
+            wte = nn.Linear(self.vqvae_local[0].embed_dim, n_embd, bias=bias)
+        ))
+
+        ctx_cfg = getattr(config, 'ctx_encoder', None)
+        self.use_ctx_encoder = bool(getattr(ctx_cfg, 'enabled', False)) if ctx_cfg is not None else False
+        self.ctx_pretrained = str(getattr(ctx_cfg, 'pretrained', '') or '') if ctx_cfg is not None else ''
+        if self.use_ctx_encoder and self.ctx_pretrained:
+            from transformers import T5EncoderModel
+            self.ctx_t5 = T5EncoderModel.from_pretrained(self.ctx_pretrained)
+            self.ctx_t5_finetune = bool(getattr(ctx_cfg, 'finetune', False))
+            if not self.ctx_t5_finetune:
+                self.ctx_t5.eval()
+                for p in self.ctx_t5.parameters():
+                    p.requires_grad = False
+            d_ctx = int(self.ctx_t5.config.d_model)
+            self.ctx_proj = nn.Linear(d_ctx, n_embd, bias=bias)
+            self.ctx_pad_id = int(getattr(ctx_cfg, 'pad_id', 0))
+            print(f"[ctx_encoder] pretrained={self.ctx_pretrained} d_model={d_ctx}->{n_embd} "
+                  f"frozen={not self.ctx_t5_finetune} "
+                  f"params={sum(p.numel() for p in self.ctx_t5.parameters())/1e6:.2f}M",
+                  flush=True)
+        elif self.use_ctx_encoder:
+            n_ctx_layer = int(getattr(ctx_cfg, 'n_layer', 4))
+            ctx_vocab = int(getattr(ctx_cfg, 'vocab_size', self.vqvae_local[0].in_vocab_size))
+            self.ctx_wte = nn.Embedding(ctx_vocab, n_embd)
+            if bool(getattr(ctx_cfg, 'init_from_gpt2', False)):
+                from transformers import GPT2Model
+                with torch.no_grad():
+                    g = GPT2Model.from_pretrained('gpt2').wte.weight.data.to(
+                        self.ctx_wte.weight.dtype)
+                    tgt = float(getattr(ctx_cfg, 'init_scale_norm', 20.15))
+                    g = g * (tgt / g.norm(dim=1).mean())
+                    n = min(g.shape[0], ctx_vocab)
+                    self.ctx_wte.weight[:n].copy_(g[:n])
+                    if ctx_vocab > n:
+                        nn.init.trunc_normal_(self.ctx_wte.weight[n:],
+                                              mean=0.0, std=init_std)
+            elif bool(getattr(ctx_cfg, 'init_from_vqvae', False)):
+                with torch.no_grad():
+                    src = self.vqvae_local[0].encoder.wte.weight
+                    proj = self.transformer.wte.weight
+                    w = src.to(proj.dtype) @ proj.t()
+                    if self.transformer.wte.bias is not None:
+                        w = w + self.transformer.wte.bias
+                    V = min(w.shape[0], ctx_vocab)
+                    self.ctx_wte.weight[:V].copy_(w[:V])
+            else:
+                nn.init.trunc_normal_(self.ctx_wte.weight, mean=0.0, std=init_std)
+            self.ctx_blocks = nn.ModuleList([Block(config) for _ in range(n_ctx_layer)])
+            self.ctx_ln = LayerNorm(n_embd, bias=bias) if n_ctx_layer > 0 else nn.Identity()
+
+        puc_cfg = getattr(config, 'post_upsample_conv', None)
+        self.use_post_upsample_conv = bool(getattr(puc_cfg, 'enabled', False)) if puc_cfg is not None else False
+        if self.use_post_upsample_conv:
+            k = int(getattr(puc_cfg, 'kernel_size', 3))
+            assert k % 2 == 1, "post_upsample_conv.kernel_size must be odd for same-length padding"
+            vq_dim = self.vqvae_local[0].embed_dim
+            self.post_upsample_convs = nn.ModuleList([
+                nn.Conv1d(vq_dim, vq_dim, kernel_size=k, padding=k // 2)
+                for _ in range(len(self.levels) - (0 if self.query_level0 else 1))
+            ])
+            for conv in self.post_upsample_convs:
+                nn.init.zeros_(conv.weight)
+                nn.init.zeros_(conv.bias)
+
+        if config.use_level_encoding:
+            self.transformer.update(dict(
+                wle = nn.Embedding(len(self.levels) - (0 if self.query_level0 else 1), n_embd)
+            ))
+
+        self.transformer.update(dict(
+            drop = nn.Dropout(dropout),
+            blocks = nn.ModuleList([Block(config) for _ in range(n_layer)]),
+            ln_f = LayerNorm(n_embd, bias=bias),
+        ))
+
+        _n_heads = len(self.levels) - (0 if self.query_level0 else 1)
+        assert len(vocab_size) == _n_heads, \
+            f"vocab_size length {len(vocab_size)} must equal {_n_heads} " \
+            f"(query_level0={self.query_level0}, levels={len(self.levels)})"
+        self.vocab_sizes = list(vocab_size)
+
+        if bool(getattr(config, 'shared_head_mlp', False)):
+            raise ValueError("shared_head_mlp is not supported")
+        self.shared_output_head = bool(getattr(config, 'shared_output_head', False))
+        if self.shared_output_head:
+            assert len(set(self.vocab_sizes)) == 1, "shared_output_head requires equal vocab sizes"
+            _plb = bool(getattr(config, 'shared_head_per_level_bias', False))
+            _hb = bool(getattr(config, 'untied_head_bias', True)) and not _plb
+            self.lm_heads = _SharedHeads(nn.Linear(n_embd, self.vocab_sizes[0], bias=_hb),
+                                         len(self.vocab_sizes), per_level_bias=_plb)
+        elif bool(getattr(config, 'tie_heads_to_codebook', False)):
+            _vq = self.vqvae_local[0].vq
+            _ls = bool(getattr(config, 'tie_heads_learn_scale', True))
+            _tr = bool(getattr(config, 'tie_heads_trainable', False))
+            _bi = bool(getattr(config, 'tie_heads_bias', False))
+            self.lm_heads = nn.ModuleList([
+                _TiedCodebookHead(n_embd, _vq.embeddings[i + self._lvl_first].weight,
+                                  learn_scale=_ls, trainable=_tr, use_bias=_bi)
+                for i in range(len(self.vocab_sizes))
+            ])
+        else:
+            _hb = bool(getattr(config, 'untied_head_bias', True))
+            self.lm_heads = nn.ModuleList([
+                nn.Linear(n_embd, vs, bias=_hb) for vs in self.vocab_sizes
+            ])
+
+        if self.query_level0:
+            self.l0_queries = nn.Parameter(
+                torch.zeros(1, self.levels[0], self.vqvae_local[0].embed_dim))
+            nn.init.trunc_normal_(self.l0_queries, mean=0.0, std=init_std)
+
+        self.prefix_len = P
+
+        _ppid = getattr(config, 'prefix_pad_token_id', None)
+        self.prefix_pad_id = int(_ppid) if _ppid is not None else None
+
+        self.predict_level0 = bool(getattr(config, 'predict_level0', False))
+        self.max_vocab = max(self.vocab_sizes + [self.vqvae_local[0].vq.vqvae_vocab_sizes[0]])
+        if self.predict_level0:
+            v0 = self.vqvae_local[0].vq.vqvae_vocab_sizes[0]
+            assert P >= self.levels[0], (
+                f"predict_level0 reads the last {self.levels[0]} prefix positions; "
+                f"prefix_len={P} is too short"
+            )
+            if bool(getattr(config, 'tie_heads_to_codebook', False)):
+                self.lm_head_l0 = _TiedCodebookHead(
+                    n_embd, self.vqvae_local[0].vq.embeddings[0].weight,
+                    learn_scale=bool(getattr(config, 'tie_heads_learn_scale', True)),
+                    trainable=bool(getattr(config, 'tie_heads_trainable', False)),
+                    use_bias=bool(getattr(config, 'tie_heads_bias', False)))
+            else:
+                self.lm_head_l0 = nn.Linear(n_embd, v0, bias=False)
+
+        assert attn_pattern in ['block_diagonal', 'block_causal'], "attn_pattern must be either 'block_diagonal' or 'block_causal'"
+
+        d = torch.cat([torch.full((l,), i) for i, l in enumerate(self.levels[self._lvl_first:])]).view(1, T, 1)
+        dT = d.transpose(1, 2)
+        lvl_1L = dT[:, 0].contiguous()
+        self.register_buffer('lvl_1L', lvl_1L)
+
+        if attn_pattern == 'block_diagonal':
+            target_mask = torch.where(d == dT, 0., -torch.inf).reshape(T, T)
+        else:
+            target_mask = torch.where(d >= dT, 0., -torch.inf).reshape(T, T)
+        if self.l0_ar:
+            _l0 = self.levels[0]
+            target_mask[:_l0, :_l0] = torch.triu(
+                torch.full((_l0, _l0), -torch.inf), diagonal=1)
+
+        top_left    = torch.zeros(P, P)
+        top_right   = torch.full((P, T), -torch.inf)
+        bottom_left = torch.zeros(T, P)
+        bottom_right = target_mask
+
+        full_mask = torch.cat([
+            torch.cat([top_left,    top_right],   dim=1),
+            torch.cat([bottom_left, bottom_right], dim=1),
+        ], dim=0).reshape(1, 1, P + T, P + T)
+
+        self.register_buffer('attn_mask_for_masking', full_mask.contiguous())
+
+        self.use_flex_attention = bool(getattr(config, 'use_flex_attention', False))
+        lvl_full = torch.cat([
+            torch.full((P,), -1, dtype=torch.long),
+            torch.cat([torch.full((l,), i, dtype=torch.long)
+                       for i, l in enumerate(self.levels[self._lvl_first:])]),
+        ])
+        self.register_buffer('flex_lvl_full', lvl_full, persistent=False)
+        self._flex_block_masks = {}
+
+        for pn, p in self.named_parameters():
+            if pn.endswith('c_proj.weight'):
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * n_layer))
+
+        total_params, non_embd_params = count_params(self, exclude_params=['wte', 'wle', 'wpe'])
+        
+        print("NCP Transformer, Total parameter count: %.2fM" % (total_params/1e6,))
+        print("NCP Transformer, Non embedding parameter count: %.2fM" % (non_embd_params/1e6,))
+        
+    def _get_flex_block_mask(self, device):
+        key = str(device)
+        if key not in self._flex_block_masks:
+            from torch.nn.attention.flex_attention import create_block_mask
+            P = self.prefix_len
+            S = P + (self.L - self.levels[0])
+            lvl = self.flex_lvl_full.to(device)
+            block_causal = getattr(self.config, 'attn_pattern', 'block_diagonal') == 'block_causal'
+
+            def mask_mod(b, h, q_idx, kv_idx):
+                qc = torch.clamp(q_idx, max=S - 1)
+                kc = torch.clamp(kv_idx, max=S - 1)
+                q_pref = q_idx < P
+                kv_pref = kv_idx < P
+                if block_causal:
+                    same = (lvl[kc] <= lvl[qc]) & (lvl[kc] >= 0)
+                else:
+                    same = (lvl[qc] == lvl[kc]) & (lvl[kc] >= 0)
+                return torch.where(q_pref, kv_pref, kv_pref | same)
+
+            block_size = int(getattr(self.config, 'flex_block_size', 128))
+            self._flex_block_masks[key] = create_block_mask(
+                mask_mod, B=None, H=None, Q_LEN=S, KV_LEN=S, device=device,
+                BLOCK_SIZE=block_size,
+            )
+        return self._flex_block_masks[key]
+
+    def _apply_post_upsample_convs_multi(self, x_target):
+        refined_chunks = []
+        offset = 0
+        for i, level in enumerate(self.levels[self._lvl_first:]):
+            chunk = x_target[:, offset:offset + level, :]
+            delta = self.post_upsample_convs[i](
+                chunk.transpose(-1, -2)
+            ).transpose(-1, -2)
+            refined_chunks.append(chunk + delta)
+            offset += level
+        return torch.cat(refined_chunks, dim=1)
+
+    def _apply_post_upsample_conv_single(self, chunk, level_idx_in_target):
+        delta = self.post_upsample_convs[level_idx_in_target](
+            chunk.transpose(-1, -2)
+        ).transpose(-1, -2)
+        return chunk + delta
+
+    def _encode_context(self, prefix_ids):
+        if self.ctx_pretrained:
+            am = (prefix_ids != self.ctx_pad_id).long()
+            if self.ctx_t5_finetune:
+                h = self.ctx_t5(input_ids=prefix_ids, attention_mask=am).last_hidden_state
+            else:
+                with torch.no_grad():
+                    h = self.ctx_t5(input_ids=prefix_ids,
+                                    attention_mask=am).last_hidden_state
+            return self.ctx_proj(h.to(self.ctx_proj.weight.dtype))
+        h = self.ctx_wte(prefix_ids)
+        rope_p = (self.rope_cos[:self.prefix_len],
+                  self.rope_sin[:self.prefix_len]) if self.use_rope else None
+        P = self.prefix_len
+        ctx_mask = torch.zeros(1, 1, P, P, device=h.device)
+        for block in self.ctx_blocks:
+            h = block(h, attn_mask=ctx_mask, rope_cos_sin=rope_p)
+        return self.ctx_ln(h)
+
+    def forward(self, x, prefix_ids=None, prefix_pad_mask=None):
+        if self.use_ctx_encoder:
+            assert prefix_ids is not None, "ctx_encoder requires prefix_ids"
+            prefix_emb = self._encode_context(prefix_ids)
+            x_target = x
+            if self.use_post_upsample_conv:
+                x_target = self._apply_post_upsample_convs_multi(x_target)
+            x = self.transformer.wte(x_target)
+            if not self.use_rope:
+                x = x + self.wpe(self.wp_1L)
+            if self.config.use_level_encoding:
+                x = x + self.transformer.wle(self.lvl_1L)
+            return self._run_stack(prefix_emb, x, prefix_pad_mask)
+
+        z_prefix = x[:, :self.prefix_len, :]
+        x_target = x[:, self.prefix_len:, :]
+
+        if self.use_post_upsample_conv:
+            x_target = self._apply_post_upsample_convs_multi(x_target)
+
+        prefix_emb = self.transformer.wte(z_prefix)
+        x = self.transformer.wte(x_target)
+
+        if not self.use_rope:
+            prefix_emb = prefix_emb + self.wpe(self.wp_prefix)
+##### models/quant.py (736 lines)
+import math
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.distributed as dist
+from torch.nn import functional as F
+from utils.registry import level_schedulers
+
+
+# Phi (quant_resi): per-level residual conv after upsample, blending (1-r)*h + r*Conv1d(h).
+class Phi(nn.Conv1d):
+    def __init__(self, embed_dim, quant_resi, learnable_ratio=False):
+        ks = 3
+        super().__init__(
+            in_channels=embed_dim,
+            out_channels=embed_dim,
+            kernel_size=ks,
+            stride=1,
+            padding=ks // 2,
+        )
+        init_ratio = abs(quant_resi)
+        self._learnable_ratio = bool(learnable_ratio)
+        if self._learnable_ratio:
+            r_clamped = min(max(init_ratio, 1e-4), 1 - 1e-4)
+            init_logit = math.log(r_clamped / (1 - r_clamped))
+            self.ratio_logit = nn.Parameter(torch.tensor(init_logit, dtype=torch.float32))
+        else:
+            self._ratio_const = init_ratio
+
+    @property
+    def resi_ratio(self):
+        if self._learnable_ratio:
+            return torch.sigmoid(self.ratio_logit)
+        return self._ratio_const
+
+    def forward(self, h_BCL):
+        r = self.resi_ratio
+        return h_BCL * (1 - r) + super().forward(h_BCL) * r
+
+
+class PhiConvStack(nn.Module):
+    def __init__(self, embed_dim, kernel_size=3, hidden_mult=1):
+        super().__init__()
+        ks = kernel_size
+        pad = ks // 2
+        h = embed_dim * hidden_mult
+        self.c1 = nn.Conv1d(embed_dim, h, kernel_size=ks, padding=pad)
+        self.act1 = nn.GELU()
+        self.c2 = nn.Conv1d(h, h, kernel_size=ks, padding=pad)
+        self.act2 = nn.GELU()
+        self.c3 = nn.Conv1d(h, embed_dim, kernel_size=ks, padding=pad)
+        nn.init.zeros_(self.c3.weight)
+        nn.init.zeros_(self.c3.bias)
+
+    def forward(self, h_BCL):
+        y = self.act1(self.c1(h_BCL))
+        y = self.act2(self.c2(y))
+        y = self.c3(y)
+        return h_BCL + y
+
+
+class PhiShared(nn.Module):
+    def __init__(self, qresi):
+        super().__init__()
+        self.qresi = qresi
+
+    def __getitem__(self, _):
+        return self.qresi
+
+
+class PhiPartiallyShared(nn.Module):
+    def __init__(self, qresi_ls):
+        super().__init__()
+        self.qresi_ls = qresi_ls
+        K = len(qresi_ls)
+        self.ticks = np.linspace(1 / 3 / K, 1 - 1 / 3 / K, K) if K == 4 else np.linspace(1 / 2 / K, 1 - 1 / 2 / K, K)
+
+    def __getitem__(self, at_from_0_to_1):
+        return self.qresi_ls[np.argmin(np.abs(self.ticks - at_from_0_to_1)).item()]
+
+    def extra_repr(self):
+        return f'ticks={self.ticks}'
+
+
+class PhiNonShared(nn.ModuleList):
+    def __init__(self, qresi):
+        super().__init__(qresi)
+        K = len(qresi)
+        self.ticks = np.linspace(1 / 3 / K, 1 - 1 / 3 / K, K) if K == 4 else np.linspace(1 / 2 / K, 1 - 1 / 2 / K, K)
+
+    def __getitem__(self, at_from_0_to_1):
+        return super().__getitem__(np.argmin(np.abs(self.ticks - at_from_0_to_1)).item())
+
+    def extra_repr(self):
+        return f'ticks={self.ticks}'
+
+
+def _cfg_get(cfg, key, default):
+    if cfg is None:
+        return default
+    if hasattr(cfg, key):
+        return getattr(cfg, key, default)
+    if isinstance(cfg, dict) and key in cfg:
+        return cfg[key]
+    return default
+
+
+def _build_quant_resi(embed_dim, num_levels, quant_resi_config):
+    enabled = bool(_cfg_get(quant_resi_config, 'enabled', True))
+    if not enabled:
+        return None
+    raw_ratio = _cfg_get(quant_resi_config, 'ratio', 0.5)
+    share_mode = int(_cfg_get(quant_resi_config, 'share_mode', 0))
+    learnable_ratio = bool(_cfg_get(quant_resi_config, 'learnable_ratio', False))
+    arch = str(_cfg_get(quant_resi_config, 'arch', 'blend'))
+    hidden_mult = int(_cfg_get(quant_resi_config, 'hidden_mult', 1))
+    kernel_size = int(_cfg_get(quant_resi_config, 'kernel_size', 3))
+
+    if isinstance(raw_ratio, (list, tuple)) or (hasattr(raw_ratio, '__len__') and not isinstance(raw_ratio, str)):
+        ratios_per_level = [float(r) for r in raw_ratio]
+        if share_mode != 0:
+            raise ValueError(
+                f"per-level ratio list requires share_mode=0 (non-shared); got share_mode={share_mode}"
+            )
+        if len(ratios_per_level) != num_levels:
+            raise ValueError(
+                f"ratio list must have length {num_levels} (one per level); got {len(ratios_per_level)}"
+            )
+    else:
+        ratios_per_level = [float(raw_ratio)] * num_levels
+
+    def make_phi(r):
+        if arch == 'convstack':
+            return PhiConvStack(embed_dim, kernel_size=kernel_size, hidden_mult=hidden_mult)
+        if learnable_ratio:
+            return Phi(embed_dim, r, learnable_ratio=True)
+        return Phi(embed_dim, r) if abs(r) > 1e-6 else nn.Identity()
+
+    if share_mode == 0:
+        return PhiNonShared([make_phi(r) for r in ratios_per_level])
+    if share_mode == 1:
+        return PhiShared(make_phi(ratios_per_level[0]))
+    return PhiPartiallyShared(nn.ModuleList([make_phi(ratios_per_level[0]) for _ in range(share_mode)]))
+
+def _make_learned_down_l1(D, stride=4):
+    conv = nn.Conv1d(D, D, kernel_size=stride, stride=stride, bias=True)
+    with torch.no_grad():
+        conv.weight.zero_()
+        eye_idx = torch.arange(D)
+        conv.weight[eye_idx, eye_idx, :] = 1.0 / stride
+        conv.bias.zero_()
+    return conv
+
+
+def _make_learned_up_l1(D, stride=4):
+    convT = nn.ConvTranspose1d(D, D, kernel_size=stride, stride=stride, bias=True)
+    with torch.no_grad():
+        convT.weight.zero_()
+        eye_idx = torch.arange(D)
+        convT.weight[eye_idx, eye_idx, :] = 1.0
+        convT.bias.zero_()
+    return convT
+
+
+def _plan_cascade_strides(total_stride, base=4):
+    S = int(total_stride)
+    strides = []
+    while S > 1:
+        f = min(base, S)
+        while f > 1 and S % f != 0:
+            f -= 1
+        if f <= 1:
+            strides.append(S)
+            S = 1
+        else:
+            strides.append(f)
+            S //= f
+    return strides or [1]
+
+
+def _cascade_norm(D, groups=8):
+    return nn.GroupNorm(groups, D, affine=False)
+
+
+def _make_cascaded_down_l1(D, total_stride, base=4, inter_norm=False, final_norm=False):
+    strides = _plan_cascade_strides(total_stride, base)
+    mods = []
+    for i, s in enumerate(strides):
+        if inter_norm and i > 0:
+            mods.append(_cascade_norm(D))
+        mods.append(_make_learned_down_l1(D, stride=s))
+    if final_norm:
+        mods.append(_cascade_norm(D))
+    return nn.Sequential(*mods)
+
+
+def _make_cascaded_up_l1(D, total_stride, base=4, inter_norm=False):
+    strides = list(reversed(_plan_cascade_strides(total_stride, base)))
+    mods = []
+    for i, s in enumerate(strides):
+        if inter_norm and i > 0:
+            mods.append(_cascade_norm(D))
+        mods.append(_make_learned_up_l1(D, stride=s))
+    return nn.Sequential(*mods)
+
+
+def _make_zeroinit_residual_conv(D, kernel_size=3):
+    pad = kernel_size // 2
+    conv = nn.Conv1d(D, D, kernel_size=kernel_size, stride=1, padding=pad, bias=True)
+    with torch.no_grad():
+        conv.weight.zero_()
+        conv.bias.zero_()
+    return conv
+
+
+class VectorQuantizerBaseClass(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, inputs):
+        _ = inputs
+        raise NotImplementedError
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(**{k: v for k, v in config.items() if k != "clss"})
+
+class MultiscaleResidualVectorQuantizer(VectorQuantizerBaseClass):
+    def __init__(
+        self,
+        vqvae_vocab_size,
+        embed_dim,
+        levels,
+        commitment_cost=0.25,
+        decay=0.99,
+        epsilon=1e-5,
+        quant_resi=None,
+        learned_l1_sampling=False,
+        learned_all_sampling=False,
+        learned_l1_cascade=False,
+        learned_l1_cascade_base=4,
+        learned_l1_cascade_norm=False,
+        learned_l1_cascade_norm_final=False,
+        restart_threshold=0.0,
+        ema_scale_by_world_size=False,
+        kmeans_init=False,
+        kmeans_iters=10,
+        pre_quant_norm_type='group',
+        aux=None,
+    ):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.commitment_cost = commitment_cost
+        self.epsilon = epsilon
+        self.ema_scale_by_world_size = bool(ema_scale_by_world_size)
+        if isinstance(decay, (list, tuple)):
+            self.base_decay = float(decay[0])
+            self.base_decay_per_level = [float(x) for x in decay]
+        else:
+            self.base_decay = float(decay)
+            self.base_decay_per_level = None
+        # Fine-level dropout: hand the decoder a z_hat truncated at a random level >= min_keep. Train-only.
+        _fd = _cfg_get(aux, 'fine_drop', None)
+        self.fine_drop_prob = float(_cfg_get(_fd, 'prob', 0.0))
+        self.fine_drop_min_keep = int(_cfg_get(_fd, 'min_keep', 2))
+        _ps = _cfg_get(_fd, 'prob_start', None)
+        self.fine_drop_prob_start = float(_ps) if _ps is not None else None
+        self.fine_drop_anneal_steps = int(_cfg_get(_fd, 'anneal_steps', 0) or 0)
+        self.register_buffer('_fd_step', torch.zeros((), dtype=torch.long), persistent=False)
+        self.learned_all_sampling = bool(learned_all_sampling)
+        self.learned_l1_sampling = bool(learned_l1_sampling) or self.learned_all_sampling
+        self.learned_l1_cascade = bool(learned_l1_cascade)
+        self.learned_l1_cascade_base = int(learned_l1_cascade_base)
+        self.learned_l1_cascade_norm = bool(learned_l1_cascade_norm)
+        self.learned_l1_cascade_norm_final = bool(learned_l1_cascade_norm_final)
+        self.restart_threshold = float(restart_threshold)
+        self.kmeans_init = bool(kmeans_init)
+        self.kmeans_iters = int(kmeans_iters)
+        self._km_buf = [[] for _ in range(len(vqvae_vocab_size))] if self.kmeans_init else None
+        if self.kmeans_init:
+            self.register_buffer('_km_done',
+                                 torch.zeros(len(vqvae_vocab_size), dtype=torch.bool),
+                                 persistent=False)
+
+        if levels.use_manual_levels:
+            self.levels = levels.manual_levels
+        else:
+            self.levels = level_schedulers[levels.scheduler](levels.start, levels.end, levels.num_levels)
+
+        assert len(vqvae_vocab_size) == len(self.levels), \
+            f"vqvae_vocab_size length {len(vqvae_vocab_size)} must match number of levels {len(self.levels)}"
+        self.vqvae_vocab_sizes = list(vqvae_vocab_size)
+
+        self.embeddings = nn.ModuleList([
+            nn.Embedding(vs, embed_dim) for vs in self.vqvae_vocab_sizes
+        ])
+        # Codebooks are updated by EMA, not gradients.
+        for emb in self.embeddings:
+            emb.weight.data.normal_()
+            emb.weight.requires_grad_(False)
+        for i, vs in enumerate(self.vqvae_vocab_sizes):
+            self.register_buffer(f'ema_cluster_size_{i}', torch.zeros(vs))
+            self.register_buffer(f'ema_w_{i}', self.embeddings[i].weight.data.clone())
+            self.register_buffer(f'codebook_hit_{i}', torch.zeros(vs, dtype=torch.long))
+
+        self.quant_resi = _build_quant_resi(embed_dim, len(self.levels), quant_resi)
+        self.quant_resi_enabled = self.quant_resi is not None
+        self._qr_num_levels = len(self.levels)
+
+        # Learned down/upsampler at level 0 only, replacing F.interpolate; init matches area-pool / nearest-repeat.
+        if self.learned_l1_sampling:
+            L = self.levels[-1]
+            ell_1 = self.levels[0]
+            stride = L // ell_1
+            assert L % ell_1 == 0 and stride * ell_1 == L, \
+                f"learned_l1_sampling requires L={L} divisible by ell_1={ell_1}"
+            if self.learned_l1_cascade:
+                b = self.learned_l1_cascade_base
+                nrm = self.learned_l1_cascade_norm
+                self.learned_down_l1 = _make_cascaded_down_l1(embed_dim, stride, base=b, inter_norm=nrm,
+                                                              final_norm=self.learned_l1_cascade_norm_final)
+                self.learned_up_l1 = _make_cascaded_up_l1(embed_dim, stride, base=b, inter_norm=nrm)
+            else:
+                self.learned_down_l1 = _make_learned_down_l1(embed_dim, stride=stride)
+                self.learned_up_l1 = _make_learned_up_l1(embed_dim, stride=stride)
+        else:
+            self.learned_down_l1 = None
+            self.learned_up_l1 = None
+
+        if self.learned_all_sampling:
+            num_levels = len(self.levels)
+            self.learned_down_refine = nn.ModuleList([
+                _make_zeroinit_residual_conv(embed_dim, kernel_size=3) if 1 <= i <= num_levels - 2 else nn.Identity()
+                for i in range(num_levels - 1)
+            ])
+            self.learned_up_refine = nn.ModuleList([
+                _make_zeroinit_residual_conv(embed_dim, kernel_size=3) if 1 <= i <= num_levels - 2 else nn.Identity()
+                for i in range(num_levels - 1)
+            ])
+        else:
+            self.learned_down_refine = None
+            self.learned_up_refine = None
+
+    @torch.no_grad()
+    def kmeans_init_level(self, level_idx, samples, n_iters=20):
+        D = samples.shape[1]
+        V = self.vqvae_vocab_sizes[level_idx]
+        device = samples.device
+        if samples.shape[0] >= V:
+            perm = torch.randperm(samples.shape[0], device=device)[:V]
+            centers = samples[perm].clone().contiguous().float()
+        else:
+            idx = torch.randint(0, samples.shape[0], (V,), device=device)
+            centers = samples[idx].clone().contiguous().float()
+        N = samples.shape[0]
+        chunk = max(1, min(N, 8192))
+        for it in range(n_iters):
+            assigns = torch.empty(N, dtype=torch.long, device=device)
+            for i in range(0, N, chunk):
+                xs = samples[i:i+chunk].float()
+                d2 = (xs**2).sum(1, keepdim=True) + (centers**2).sum(1) - 2 * (xs @ centers.T)
+                assigns[i:i+chunk] = d2.argmin(dim=1)
+            new_centers = torch.zeros_like(centers)
+            counts = torch.zeros(V, device=device)
+            new_centers.index_add_(0, assigns, samples.float())
+            counts.index_add_(0, assigns, torch.ones_like(assigns, dtype=torch.float32))
+            mask = counts > 0
+            new_centers[mask] /= counts[mask].unsqueeze(1)
+            empty = (~mask).nonzero(as_tuple=False).flatten()
+            if empty.numel() > 0:
+                rand_idx = torch.randint(0, N, (empty.numel(),), device=device)
+                new_centers[empty] = samples[rand_idx].float()
+            centers = new_centers
+        self.embeddings[level_idx].weight.data.copy_(centers.to(self.embeddings[level_idx].weight.dtype))
+        ema_cs = getattr(self, f'ema_cluster_size_{level_idx}')
+        ema_w  = getattr(self, f'ema_w_{level_idx}')
+        ema_cs.fill_(1.0)
+        ema_w.copy_(centers)
+
+    def _apply_quant_resi(self, h_BLC, level_idx):
+        if not self.quant_resi_enabled:
+            return h_BLC
+        h_BCL = h_BLC.transpose(-1, -2).contiguous()
+        at = level_idx / max(self._qr_num_levels - 1, 1)
+        h_BCL = self.quant_resi[at](h_BCL)
+        return h_BCL.transpose(-1, -2).contiguous()
+
+    def _distances(self, flat_input, emb_w):
+        return (
+            torch.sum(flat_input**2, dim=1, keepdim=True)
+            + torch.sum(emb_w**2, dim=1)
+            - 2 * torch.matmul(flat_input, emb_w.t())
+        )
+
+    def _down_for_quant(self, z_BLC, level_idx, target_len):
+        z_BCL = z_BLC.transpose(-1, -2)
+        if level_idx == 0 and self.learned_l1_sampling:
+            return self.learned_down_l1(z_BCL).transpose(-1, -2).contiguous()
+        zd_BCL = F.interpolate(z_BCL, size=(target_len,), mode="area")
+        if self.learned_all_sampling and 1 <= level_idx <= len(self.levels) - 2:
+##### models/vae.py (271 lines)
+import torch
+import torch.nn as nn
+from torch.nn import functional as F
+import math
+
+class LayerNorm(nn.Module):
+    def __init__(self, ndim, bias=False):
+        super().__init__()
+        self.weight = nn.Parameter(torch.ones(ndim))
+        self.bias = nn.Parameter(torch.zeros(ndim)) if bias else None
+
+    def forward(self, input):
+        return F.layer_norm(input, self.weight.shape, self.weight, self.bias, 1e-6)
+
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim, eps=1e-6):
+        super().__init__()
+        self.weight = nn.Parameter(torch.ones(dim))
+        self.eps = eps
+
+    def forward(self, x):
+        orig_dtype = x.dtype
+        x_f = x.float()
+        rms = x_f.pow(2).mean(dim=-1, keepdim=True).add_(self.eps).rsqrt_()
+        return (x_f * rms).to(orig_dtype) * self.weight
+
+
+class SelfAttention(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        assert config.n_embd % config.n_head == 0
+        self.c_attn = nn.Linear(config.n_embd, 3 * config.n_embd, bias=config.bias)
+        self.c_proj = nn.Linear(config.n_embd, config.n_embd, bias=config.bias)
+        self.attn_dropout = nn.Dropout(config.dropout)
+        self.resid_dropout = nn.Dropout(config.dropout)
+        self.n_head = config.n_head
+        self.n_embd = config.n_embd
+        self.dropout = config.dropout
+        self.use_qk_norm = bool(getattr(config, "use_qk_norm", False))
+        if self.use_qk_norm:
+            head_dim = config.n_embd // config.n_head
+            self.q_norm = RMSNorm(head_dim)
+            self.k_norm = RMSNorm(head_dim)
+        # attn_window=w restricts attention to |i-j| <= w; 0 means full.
+        self.attn_window = int(getattr(config, "attn_window", 0) or 0)
+        assert hasattr(torch.nn.functional, "scaled_dot_product_attention")
+
+    def _window_mask(self, T, device):
+        i = torch.arange(T, device=device)
+        return (i[:, None] - i[None, :]).abs() <= self.attn_window
+
+    def forward(self, x):
+        B, T, C = x.size()
+        q, k, v = self.c_attn(x).split(self.n_embd, dim=2)
+        k = k.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
+        q = q.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
+        v = v.view(B, T, self.n_head, C // self.n_head).transpose(1, 2)
+
+        if self.use_qk_norm:
+            q = self.q_norm(q)
+            k = self.k_norm(k)
+
+        attn_mask = self._window_mask(T, x.device) if self.attn_window > 0 else None
+        y = torch.nn.functional.scaled_dot_product_attention(
+            q, k, v, attn_mask=attn_mask, dropout_p=self.dropout if self.training else 0
+        )
+        y = y.transpose(1, 2).contiguous().view(B, T, C)
+        y = self.resid_dropout(self.c_proj(y))
+        return y
+
+
+class MLP(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.c_fc = nn.Linear(config.n_embd, 4 * config.n_embd, bias=config.bias)
+        self.gelu = nn.GELU()
+        self.c_proj = nn.Linear(4 * config.n_embd, config.n_embd, bias=config.bias)
+        self.dropout = nn.Dropout(config.dropout)
+
+    def forward(self, x):
+        x = self.c_fc(x)
+        x = self.gelu(x)
+        x = self.c_proj(x)
+        x = self.dropout(x)
+        return x
+
+
+class Block(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.ln_1 = LayerNorm(config.n_embd, bias=config.bias)
+        self.attn = SelfAttention(config)
+        self.ln_2 = LayerNorm(config.n_embd, bias=config.bias)
+        self.mlp = MLP(config)
+
+    def forward(self, x):
+        x = x + self.attn(self.ln_1(x))
+        x = x + self.mlp(self.ln_2(x))
+        return x
+
+class Encoder(nn.Module):
+    def __init__(
+        self,
+        in_vocab_size,
+        context_length,
+        embed_dim,
+        n_layers,
+        compression_factor=4,
+        kernel_size=8,
+        stride=2,
+        bias=False,
+        padding=3,
+        dropout=0.1,
+        enc_layers=0,
+        use_qk_norm=False,
+        enc_attn_window=0,
+        enc_conv_layers=0,
+        enc_conv_kernel=3,
+        use_pos_emb=True,
+    ):
+        super().__init__()
+
+        assert compression_factor ==1 or compression_factor % 2 == 0, "Compression factor must be a power of 2"
+        self.compression_factor = compression_factor
+        self.wte = nn.Embedding(in_vocab_size, embed_dim)
+        self.wpe = nn.Embedding(context_length, embed_dim) if use_pos_emb else None
+        self.drop = nn.Dropout(dropout)
+
+        self.blocks = nn.ModuleList([
+            Block(config=type("Config", (object,), {
+                "n_embd": embed_dim, "n_head": n_layers, "bias": True,
+                "dropout": dropout, "use_qk_norm": use_qk_norm,
+                "attn_window": int(enc_attn_window)}))
+            for _ in range(int(enc_layers))
+        ])
+        k = int(enc_conv_kernel)
+        self.conv_blocks = nn.ModuleList()
+        for _ in range(int(enc_conv_layers)):
+            c1 = nn.Conv1d(embed_dim, embed_dim, k, padding=k // 2)
+            c2 = nn.Conv1d(embed_dim, embed_dim, k, padding=k // 2)
+            nn.init.zeros_(c2.weight); nn.init.zeros_(c2.bias)
+            self.conv_blocks.append(nn.ModuleDict({
+                "ln": LayerNorm(embed_dim), "c1": c1, "c2": c2}))
+        self.ln_e = LayerNorm(embed_dim) if (int(enc_layers) > 0 or int(enc_conv_layers) > 0) else None
+
+        # Sequence compression: f>1 shortens the sequence before quantization; init is an average pool.
+        self.down = None
+        if int(compression_factor) > 1:
+            f = int(compression_factor)
+            conv = nn.Conv1d(embed_dim, embed_dim, kernel_size=f, stride=f, bias=True)
+            with torch.no_grad():
+                conv.weight.zero_()
+                idx = torch.arange(embed_dim)
+                conv.weight[idx, idx, :] = 1.0 / f
+                conv.bias.zero_()
+            self.down = conv
+
+    def _conv_stack(self, x):
+        for blk in self.conv_blocks:
+            h = blk["ln"](x).transpose(1, 2)
+            h = blk["c2"](F.gelu(blk["c1"](h))).transpose(1, 2)
+            x = x + h
+        return x
+
+    def forward(self, idx):
+        tok_emb = self.wte(idx)
+        if self.wpe is not None:
+            pos = torch.arange(0, idx.size(1), dtype=torch.long, device=idx.device)
+            tok_emb = tok_emb + self.wpe(pos)
+        x = self.drop(tok_emb)
+        x = self._conv_stack(x)
+        for blk in self.blocks:
+            x = blk(x)
+        if self.ln_e is not None:
+            x = self.ln_e(x)
+        if self.down is not None:
+            x = self.down(x.transpose(1, 2)).transpose(1, 2)
+        return x
+
+    def forward_nopos(self, idx):
+        B, T, C = idx.shape[0], idx.shape[1], self.wte.embedding_dim
+        pos = torch.arange(T, device=idx.device, dtype=torch.float32).unsqueeze(1)
+        i = torch.arange(0, C, 2, device=idx.device, dtype=torch.float32)
+        div = torch.exp(-math.log(10000.0) * i / C)
+        pe = torch.zeros(T, C, device=idx.device, dtype=torch.float32)
+        pe[:, 0::2] = torch.sin(pos * div)
+        pe[:, 1::2] = torch.cos(pos * div)
+        x = self.drop(self.wte(idx) + pe.to(self.wte.weight.dtype).unsqueeze(0))
+        x = self._conv_stack(x)
+        for blk in self.blocks:
+            x = blk(x)
+        if self.ln_e is not None:
+            x = self.ln_e(x)
+        return x
+
+
+class Decoder(nn.Module):
+    def __init__(
+        self,
+        in_vocab_size,
+        embed_dim,
+        n_layers,
+        compression_factor=4,
+        kernel_size=8,
+        stride=2,
+        bias=False,
+        padding=3,
+        dropout=0.1,
+        use_qk_norm=False,
+        dec_layers=1,
+        use_pos_emb=False,
+        context_length=None,
+    ):
+        super().__init__()
+
+        assert compression_factor ==1 or compression_factor % 2 == 0, "Compression factor must be a power of 2"
+
+        self.wpe = nn.Embedding(int(context_length), embed_dim) if use_pos_emb else None
+        self.drop = nn.Dropout(dropout)
+        self.ln_f = LayerNorm(embed_dim)
+        self.compression_factor = compression_factor
+
+        # n_layers is the head count here, not a depth.
+        _cfg = type("Config", (object,), {
+            "n_embd": embed_dim, "n_head": n_layers, "bias": True,
+            "dropout": dropout, "use_qk_norm": use_qk_norm})
+        self.middle_block = Block(config=_cfg)
+        self.extra_blocks = nn.ModuleList(
+            [Block(config=_cfg) for _ in range(max(0, int(dec_layers) - 1))]
+        )
+
+        self.output_layer = nn.Linear(embed_dim, in_vocab_size, bias=False)
+        self.ln_f = LayerNorm(embed_dim)
+
+        self.up = None
+        if int(compression_factor) > 1:
+            f = int(compression_factor)
+            convT = nn.ConvTranspose1d(embed_dim, embed_dim, kernel_size=f, stride=f, bias=True)
+            with torch.no_grad():
+                convT.weight.zero_()
+                idx = torch.arange(embed_dim)
+                convT.weight[idx, idx, :] = 1.0
+                convT.bias.zero_()
+            self.up = convT
+
+
+    def forward(self, z):
+        if self.up is not None:
+            z = self.up(z.transpose(1, 2)).transpose(1, 2)
+        if self.wpe is not None:
+            z = z + self.wpe(torch.arange(z.shape[1], dtype=torch.long, device=z.device))
+        x = self.middle_block(z)
+        for blk in self.extra_blocks:
+            x = blk(x)
+        x = self.ln_f(x)
+        x = self.output_layer(x)
+        return x
+    
+    
+if __name__ == "__main__": 
+    encoder = Encoder(in_vocab_size=1000, context_length=512, compression_factor=1, embed_dim=256, n_layers=1)
+    decoder = Decoder(in_vocab_size=1000, embed_dim=256, compression_factor=1, n_layers=1)
+
+    print(encoder)
+    print(decoder)
+    sample_input = torch.randint(0, 1000, (2, 512))
+    encoded_output = encoder(sample_input)
+    decoded_output = decoder(encoded_output)
+
+    print("Encoded output shape:", encoded_output.shape)
+    print("Decoded output shape:", decoded_output.shape)##### models/vqvae.py (164 lines)
+import torch.nn as nn
+import torch.nn.functional as F
+from models.vae import Encoder, Decoder
+from utils.registry import vector_quantizers
+import torch
+import hydra 
+from omegaconf import OmegaConf
+from utils.misc import count_params
+
+class VQVAE(nn.Module):
+    def __init__(
+        self,
+        in_vocab_size,
+        context_length,
+        embed_dim,
+        vqvae_vocab_size,
+        n_layers,
+        vector_quantizer_config,
+        compression_factor=4,
+        dropout=0.1,
+        pre_quant_groupnorm=None,
+        pre_quant_dropout=None,
+        use_qk_norm=False,
+        enc_layers=0,
+        enc_attn_window=0,
+        enc_conv_layers=0,
+        enc_conv_kernel=3,
+        dec_layers=1,
+        pre_quant_norm_type='group',
+        enc_positional=True,
+        dec_positional=False,
+        **kwargs
+    ):
+        super().__init__()
+        _ = kwargs
+        self.embed_dim = embed_dim
+        self.vqvae_vocab_size = vqvae_vocab_size
+        self.in_vocab_size = in_vocab_size
+        self.context_length = context_length
+
+        # enc_layers=0 / dec_layers=1 reproduce the original architecture: encoder = wte+wpe lookup, decoder = one Block.
+        self.encoder = Encoder(
+            in_vocab_size, context_length, embed_dim, n_layers, compression_factor=compression_factor,
+            dropout=dropout, enc_layers=enc_layers, use_qk_norm=use_qk_norm,
+            enc_attn_window=enc_attn_window,
+            enc_conv_layers=enc_conv_layers, enc_conv_kernel=enc_conv_kernel,
+            use_pos_emb=enc_positional,
+        )
+        
+        vq = hydra.utils.get_class(vector_quantizers[vector_quantizer_config.clss])
+        self.vq = vq.from_config({ **{'vqvae_vocab_size': vqvae_vocab_size, 'embed_dim': embed_dim}, **dict(vector_quantizer_config)})
+                
+        self.decoder = Decoder(
+            in_vocab_size, embed_dim, n_layers, compression_factor=compression_factor,
+            dropout=dropout, use_qk_norm=use_qk_norm, dec_layers=dec_layers,
+            use_pos_emb=dec_positional, context_length=context_length,
+        )
+
+        # affine=False: ||z-e||^2 is not scale-invariant, so a learnable gamma would inflate without bound.
+        if not pre_quant_groupnorm:
+            self.pre_quant_norm = None
+        elif str(pre_quant_norm_type) == 'layer':
+            self.pre_quant_norm = nn.LayerNorm(embed_dim, elementwise_affine=False)
+            self._pre_quant_is_layer = True
+        else:
+            self.pre_quant_norm = nn.GroupNorm(int(pre_quant_groupnorm), embed_dim, affine=False)
+            self._pre_quant_is_layer = False
+
+        self.pre_quant_drop = (
+            nn.Dropout(float(pre_quant_dropout)) if pre_quant_dropout else None
+        )
+
+        self.context_length = context_length
+
+        total_params, non_embd_params = count_params(self, exclude_params=['wte', 'wpe'])
+
+        print("VQVAE, Total parameter count: %.2fM" % (total_params/1e6,))
+        print("VQVAE, Non embedding parameter count: %.2fM" % (non_embd_params/1e6,))
+
+    def _encode_pre_quant(self, x):
+        z = self.encoder(x)
+        if self.pre_quant_norm is not None:
+            if getattr(self, '_pre_quant_is_layer', False):
+                z = self.pre_quant_norm(z)
+            else:
+                z = self.pre_quant_norm(z.transpose(1, 2)).transpose(1, 2)
+        if self.pre_quant_drop is not None:
+            z = self.pre_quant_drop(z)
+        return z
+
+    def forward(self, x):
+        z = self._encode_pre_quant(x)
+        z_q, vq_loss, per_level_codebook_util, global_codebook_util, ppl = self.vq(z)
+        x = self.decoder(z_q)
+        return x, vq_loss, per_level_codebook_util, global_codebook_util, ppl
+
+    @torch.no_grad()
+    def encode(self, x):
+        z = self._encode_pre_quant(x)
+        idx = self.vq.z_to_idx(z)
+        return idx
+
+    @torch.no_grad()
+    def encode_z(self, x):
+        return self._encode_pre_quant(x)
+    
+    @torch.no_grad()
+    def decode(self, idx):
+        z_q = self.vq.idx_to_z_q(idx)
+        x = self.decoder(z_q)
+        return x
+    
+    @torch.no_grad()
+    def reconstruct(self, x):
+        z = self._encode_pre_quant(x)
+        z_q, _, _ = self.vq(z)
+        x_recon = self.decoder(z_q)
+        return x_recon
+    
+    @torch.no_grad()
+    def get_ncm_inputs(self, pre_tokenized_ids: torch.Tensor):
+        idx = self.encode(pre_tokenized_ids)
+        x =  self.vq.idx_to_ncm_input(idx)
+        return x, idx[:, self.vq.levels[0]:]
+    
+    @torch.no_grad()
+    def reconstruct_multiscales(self, idx_pre_tokenized: torch.Tensor):
+        B, _ = idx_pre_tokenized.shape
+        z = self._encode_pre_quant(idx_pre_tokenized)
+        _, multiscale_zqs = self.vq.z_to_idx(z, return_zlevels=True)
+        reconstructions = []
+        for z_q in multiscale_zqs:
+            logits = self.decoder(z_q)
+            x = torch.argmax(logits, dim=-1)
+            reconstructions.append(x)
+            
+        reconstructions_reordered = [[] for _ in range(B)]
+        for i in range(len(reconstructions)):
+            for j in range(B):
+                reconstructions_reordered[j].append(reconstructions[i][j].tolist())
+        return reconstructions_reordered
+    
+    
+if __name__ == "__main__":
+    
+    vqvae = VQVAE(
+        in_vocab_size=1000,
+        context_length=512,
+        embed_dim=256,
+        vqvae_vocab_size=512,
+        n_layers=8,
+        vector_quantizer_config= OmegaConf.create({
+            'clss': 'multiscale_residual_vector_quantizer',
+            'decay': 0.99,
+            'commitment_cost': 0.25,
+            'levels': [1, 2, 4, 8, 12, 16, 24, 32, 48, 56, 64, 72, 84, 96, 114, 128]
+        })
+    )
+
+    print(vqvae)
+    sample_input = torch.randint(0, 1000, (2, 512))
+    output, vq_loss, _, _, ppl = vqvae(sample_input)
+    print("Output shape:", output.shape)
+    print("VQ Loss:", vq_loss.item())
+
+-- 5. configs
+##### config/eval/tinystories.yaml
+task: tinystories
+checkpoints:
+  generator: generator.pt
+  tokenizer: tokenizer.pt
+  bpe_vocab: bpe_vocab_8192.pickle
+  bpe_merges: bpe_merges_8192.pickle
+data: {}
+model:
+  n_layer: 12
+  n_head: 12
+  bias: true
+  dropout: 0.1
+  n_embd: 768
+  context_length: 129
+  prefix_len: 1
+  raw_token_prefix: true
+  prefix_pad_token_id: 1
+  vocab_size:
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  predict_level0: false
+  attn_pattern: block_diagonal
+  use_positional_encoding: true
+  use_level_encoding: true
+  use_rope: true
+  rope_base: 100000
+  use_qk_norm: true
+  ctx_encoder:
+    enabled: false
+    n_layer: 4
+    vocab_size: 8192
+  use_flex_attention: false
+  query_level0: false
+  tie_heads_to_codebook: true
+  tie_heads_learn_scale: true
+tokenizer:
+  pre_tokenizer:
+    name: bpe
+    tokenizer: bpe
+    vocab_file_path: bpe_vocab_8192.pickle
+    merges_file_path: bpe_merges_8192.pickle
+    special_tokens:
+      eos_token: <|endoftext|>
+      pad_token: <|pad|>
+  vqvae:
+    n_layers: 6
+    embed_dim: 384
+    in_vocab_size: 8192
+    context_length: 128
+    compression_factor: 1
+    dropout: 0.3
+    pre_quant_groupnorm: 8
+    use_qk_norm: true
+    pre_quant_dropout: 0.0
+    vqvae_vocab_size:
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    checkpoint_path: tokenizer.pt
+    vector_quantizer_config:
+      clss: multiscale_residual_vector_quantizer
+      decay: 0.95
+      epsilon: 1.0e-05
+      commitment_cost: 0.25
+      learned_l1_sampling: true
+      learned_l1_cascade: true
+      learned_l1_cascade_base: 4
+      learned_all_sampling: false
+      quant_resi:
+        enabled: true
+        ratio: 0.5
+        share_mode: 0
+        learnable_ratio: false
+      aux:
+        fine_drop:
+          prob: 0.5
+          min_keep: 1
+      levels:
+        use_manual_levels: true
+        manual_levels:
+        - 1
+        - 8
+        - 16
+        - 24
+        - 32
+        - 40
+        - 52
+        - 64
+        - 76
+        - 92
+        - 108
+        - 128
+      learned_l1_cascade_norm: false
+      learned_l1_cascade_norm_final: false
+      ema_scale_by_world_size: false
+generation:
+  temperature: 1.0
+  top_k: 0
+  top_p: 1.0
+  cfg_scale: 0.0
+  level0_unigram: generator.pt:inference.level0_unigram
+eval:
+  n_samples: 256
+  seeds:
+  - 42
+  - 0
+  - 1
+  - 2
+  - 3
+  batch_size: 128
+  n_shards: 2
+  metric: genppl
+  ref_model: gpt2-large
+##### config/eval/lm1b-small.yaml
+task: lm1b-small
+checkpoints:
+  generator: generator.pt
+  tokenizer: ../tokenizer.pt
+data: {}
+model:
+  n_layer: 12
+  n_head: 12
+  bias: true
+  dropout: 0.1
+  n_embd: 768
+  context_length: 129
+  prefix_len: 1
+  raw_token_prefix: true
+  prefix_pad_token_id: 0
+  vocab_size:
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  predict_level0: false
+  query_level0: true
+  attn_pattern: block_diagonal
+  use_positional_encoding: true
+  use_level_encoding: true
+  use_rope: true
+  rope_base: 10000
+  use_qk_norm: true
+  use_flex_attention: false
+  ctx_encoder:
+    enabled: false
+    n_layer: 4
+    vocab_size: 30528
+  post_upsample_conv:
+    enabled: true
+    kernel_size: 3
+  shared_output_head: true
+  shared_head_per_level_bias: true
+tokenizer:
+  pre_tokenizer:
+    name: hf
+    tokenizer: hf
+    model_id: bert-base-uncased
+    special_tokens:
+      eos_token: '[CLS]'
+      pad_token: '[PAD]'
+  vqvae:
+    n_layers: 6
+    embed_dim: 384
+    in_vocab_size: 30528
+    context_length: 128
+    compression_factor: 1
+    dropout: 0.1
+    use_qk_norm: true
+    pre_quant_groupnorm: 4
+    pre_quant_dropout: 0.0
+    enc_positional: false
+    dec_positional: true
+    dec_layers: 4
+    vqvae_vocab_size:
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    checkpoint_path: tokenizer.pt
+    vector_quantizer_config:
+      clss: multiscale_residual_vector_quantizer
+      decay: 0.99
+      epsilon: 1.0e-05
+      commitment_cost: 0.25
+      learned_l1_sampling: true
+      learned_l1_cascade: false
+      learned_l1_cascade_base: 4
+      learned_all_sampling: false
+      quant_resi:
+        enabled: true
+        ratio: 0.5
+        share_mode: 0
+        learnable_ratio: false
+      levels:
+        use_manual_levels: true
+        manual_levels:
+        - 1
+        - 8
+        - 16
+        - 24
+        - 32
+        - 40
+        - 52
+        - 64
+        - 76
+        - 92
+        - 108
+        - 128
+      aux:
+        fine_drop:
+          dual: true
+          prob: 1.0
+          min_keep: 1
+          w_full: 0.7
+          w_trunc: 0.3
+        code_corruption:
+          enabled: true
+          mode: uniform
+          random_rate: true
+          low: 0.0
+          high: 1.0
+          skip_level0: true
+generation:
+  temperature: 1.0
+  top_k: 0
+  top_p: 1.0
+  cfg_scale: 0.0
+  frequency_penalty: 11.5
+  frequency_deficit: 2.0
+  adjacency_penalty: 10,4,0.5
+  frequency_allowance: generator.pt:inference.token_unigram
+  level0_unigram: generator.pt:inference.level0_unigram
+eval:
+  n_samples: 256
+  seeds:
+  - 42
+  - 0
+  - 1
+  - 2
+  - 3
+  batch_size: 8
+  n_shards: 2
+  metric: genppl_flm
+  ref_model: gpt2-large
+##### artifacts/tinystories/config.yaml
+task: tinystories
+checkpoints:
+  generator: generator.pt
+  tokenizer: tokenizer.pt
+  bpe_vocab: bpe_vocab_8192.pickle
+  bpe_merges: bpe_merges_8192.pickle
+data: {}
+model:
+  n_layer: 12
+  n_head: 12
+  bias: true
+  dropout: 0.1
+  n_embd: 768
+  context_length: 129
+  prefix_len: 1
+  raw_token_prefix: true
+  prefix_pad_token_id: 1
+  vocab_size:
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  - 4096
+  predict_level0: false
+  attn_pattern: block_diagonal
+  use_positional_encoding: true
+  use_level_encoding: true
+  use_rope: true
+  rope_base: 100000
+  use_qk_norm: true
+  ctx_encoder:
+    enabled: false
+    n_layer: 4
+    vocab_size: 8192
+  use_flex_attention: false
+  query_level0: false
+  tie_heads_to_codebook: true
+  tie_heads_learn_scale: true
+tokenizer:
+  pre_tokenizer:
+    name: bpe
+    tokenizer: bpe
+    vocab_file_path: bpe_vocab_8192.pickle
+    merges_file_path: bpe_merges_8192.pickle
+    special_tokens:
+      eos_token: <|endoftext|>
+      pad_token: <|pad|>
+  vqvae:
+    n_layers: 6
+    embed_dim: 384
+    in_vocab_size: 8192
+    context_length: 128
+    compression_factor: 1
+    dropout: 0.3
+    pre_quant_groupnorm: 8
+    use_qk_norm: true
+    pre_quant_dropout: 0.0
+    vqvae_vocab_size:
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    - 4096
+    checkpoint_path: tokenizer.pt
+    vector_quantizer_config:
+      clss: multiscale_residual_vector_quantizer
+      decay: 0.95
+      epsilon: 1.0e-05
+      commitment_cost: 0.25
+      learned_l1_sampling: true
+      learned_l1_cascade: true
+      learned_l1_cascade_base: 4
+      learned_all_sampling: false
+      quant_resi:
+        enabled: true
+        ratio: 0.5
+        share_mode: 0
+        learnable_ratio: false
+      aux:
+        fine_drop:
+          prob: 0.5
+          min_keep: 1
+      levels:
+        use_manual_levels: true
+        manual_levels:
+        - 1
+        - 8
+        - 16
+        - 24
+        - 32
+        - 40
+        - 52
+        - 64
+        - 76
+        - 92
+        - 108
+        - 128
+      learned_l1_cascade_norm: false
+      learned_l1_cascade_norm_final: false
+      ema_scale_by_world_size: false
+generation:
+  temperature: 1.0
+  top_k: 0
+  top_p: 1.0
+  cfg_scale: 0.0
+  level0_unigram: generator.pt:inference.level0_unigram
+eval:
+  n_samples: 256
+  seeds:
+  - 42
+  - 0
+  - 1
+  - 2
+  - 3
+  batch_size: 128
+  n_shards: 2
+  metric: genppl
+  ref_model: gpt2-large
+##### artifacts/lm1b/small/config.yaml
+task: lm1b-small
+checkpoints:
+  generator: generator.pt
+  tokenizer: ../tokenizer.pt
+data: {}
+model:
+  n_layer: 12
+  n_head: 12
+  bias: true
+  dropout: 0.1
+  n_embd: 768
+  context_length: 129
+  prefix_len: 1
+  raw_token_prefix: true
+  prefix_pad_token_id: 0
+  vocab_size:
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  - 8192
+  predict_level0: false
+  query_level0: true
+  attn_pattern: block_diagonal
+  use_positional_encoding: true
+  use_level_encoding: true
+  use_rope: true
+  rope_base: 10000
+  use_qk_norm: true
+  use_flex_attention: false
+  ctx_encoder:
+    enabled: false
+    n_layer: 4
+    vocab_size: 30528
+  post_upsample_conv:
+    enabled: true
+    kernel_size: 3
+  shared_output_head: true
+  shared_head_per_level_bias: true
+tokenizer:
+  pre_tokenizer:
+    name: hf
+    tokenizer: hf
+    model_id: bert-base-uncased
+    special_tokens:
+      eos_token: '[CLS]'
+      pad_token: '[PAD]'
+  vqvae:
+    n_layers: 6
+    embed_dim: 384
+    in_vocab_size: 30528
+    context_length: 128
+    compression_factor: 1
+    dropout: 0.1
+    use_qk_norm: true
+    pre_quant_groupnorm: 4
+    pre_quant_dropout: 0.0
+    enc_positional: false
+    dec_positional: true
+    dec_layers: 4
+    vqvae_vocab_size:
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    - 8192
+    checkpoint_path: tokenizer.pt
+    vector_quantizer_config:
+      clss: multiscale_residual_vector_quantizer
+      decay: 0.99
+      epsilon: 1.0e-05
+      commitment_cost: 0.25
+      learned_l1_sampling: true
+      learned_l1_cascade: false
+      learned_l1_cascade_base: 4
+      learned_all_sampling: false
+      quant_resi:
+        enabled: true
+        ratio: 0.5
+        share_mode: 0
+        learnable_ratio: false
+      levels:
+        use_manual_levels: true
+        manual_levels:
+        - 1
+        - 8
+        - 16
+        - 24
+        - 32
+        - 40
+        - 52
+        - 64
+        - 76
+        - 92
+        - 108
+        - 128
+      aux:
+        fine_drop:
+          dual: true
+          prob: 1.0
+          min_keep: 1
+          w_full: 0.7
+          w_trunc: 0.3
+        code_corruption:
+          enabled: true
+          mode: uniform
+          random_rate: true
+          low: 0.0
+          high: 1.0
+          skip_level0: true
+generation:
+  temperature: 1.0
+  top_k: 0
+  top_p: 1.0
+  cfg_scale: 0.0
+  frequency_penalty: 11.5
+  frequency_deficit: 2.0
+  adjacency_penalty: 10,4,0.5
+  frequency_allowance: generator.pt:inference.token_unigram
+  level0_unigram: generator.pt:inference.level0_unigram
+eval:
+  n_samples: 256
+  seeds:
+  - 42
+  - 0
+  - 1
+  - 2
+  - 3
+  batch_size: 8
+  n_shards: 2
+  metric: genppl_flm
+  ref_model: gpt2-large
+
+-- 6. what is inside tokenizer.pt
+##### artifacts/tinystories/tokenizer.pt
+  type: dict
+  top keys: ['model']
+  using sub-dict: model
+    encoder.wte.weight (8192, 384)
+    encoder.wpe.weight (128, 384)
+    vq.codebook_hit_0 (4096,)
+    vq.codebook_hit_1 (4096,)
+    vq.codebook_hit_2 (4096,)
+    vq.codebook_hit_3 (4096,)
+    vq.codebook_hit_4 (4096,)
+    vq.codebook_hit_5 (4096,)
+    vq.codebook_hit_6 (4096,)
+    vq.codebook_hit_7 (4096,)
+    vq.codebook_hit_8 (4096,)
+    vq.codebook_hit_9 (4096,)
+    vq.codebook_hit_10 (4096,)
+    vq.codebook_hit_11 (4096,)
+    vq.embeddings.0.weight (4096, 384)
+    vq.embeddings.1.weight (4096, 384)
+    vq.embeddings.2.weight (4096, 384)
+    vq.embeddings.3.weight (4096, 384)
+    vq.embeddings.4.weight (4096, 384)
+    vq.embeddings.5.weight (4096, 384)
+    vq.embeddings.6.weight (4096, 384)
+    vq.embeddings.7.weight (4096, 384)
+    vq.embeddings.8.weight (4096, 384)
+    vq.embeddings.9.weight (4096, 384)
+    vq.embeddings.10.weight (4096, 384)
+    vq.embeddings.11.weight (4096, 384)
+    vq.quant_resi.0.weight (384, 384, 3)
+    vq.quant_resi.0.bias (384,)
+    vq.quant_resi.1.weight (384, 384, 3)
+    vq.quant_resi.1.bias (384,)
+    vq.quant_resi.2.weight (384, 384, 3)
+    vq.quant_resi.2.bias (384,)
+    vq.quant_resi.3.weight (384, 384, 3)
+    vq.quant_resi.3.bias (384,)
+    vq.quant_resi.4.weight (384, 384, 3)
+    vq.quant_resi.4.bias (384,)
+    vq.quant_resi.5.weight (384, 384, 3)
+    vq.quant_resi.5.bias (384,)
+    vq.quant_resi.6.weight (384, 384, 3)
+    vq.quant_resi.6.bias (384,)
+    vq.quant_resi.7.weight (384, 384, 3)
+    vq.quant_resi.7.bias (384,)
+    vq.quant_resi.8.weight (384, 384, 3)
+    vq.quant_resi.8.bias (384,)
+    vq.quant_resi.9.weight (384, 384, 3)
+    vq.quant_resi.9.bias (384,)
+    vq.quant_resi.10.weight (384, 384, 3)
+    vq.quant_resi.10.bias (384,)
+    vq.quant_resi.11.weight (384, 384, 3)
+    vq.quant_resi.11.bias (384,)
+    decoder.ln_f.weight (384,)
+    decoder.middle_block.ln_1.weight (384,)
+    decoder.middle_block.ln_1.bias (384,)
+    decoder.middle_block.attn.c_attn.weight (1152, 384)
+    decoder.middle_block.attn.c_attn.bias (1152,)
+    decoder.middle_block.attn.c_proj.weight (384, 384)
+    decoder.middle_block.attn.c_proj.bias (384,)
+    decoder.middle_block.attn.q_norm.weight (64,)
+    decoder.middle_block.attn.k_norm.weight (64,)
+    decoder.middle_block.ln_2.weight (384,)
+    decoder.middle_block.ln_2.bias (384,)
+    decoder.middle_block.mlp.c_fc.weight (1536, 384)
+    decoder.middle_block.mlp.c_fc.bias (1536,)
+    decoder.middle_block.mlp.c_proj.weight (384, 1536)
+    decoder.middle_block.mlp.c_proj.bias (384,)
+    decoder.output_layer.weight (8192, 384)
+##### artifacts/lm1b/tokenizer.pt
+  type: dict
+  top keys: ['model']
+  using sub-dict: model
+    encoder.wte.weight (30528, 384)
+    vq.codebook_hit_0 (8192,)
+    vq.codebook_hit_1 (8192,)
+    vq.codebook_hit_2 (8192,)
+    vq.codebook_hit_3 (8192,)
+    vq.codebook_hit_4 (8192,)
+    vq.codebook_hit_5 (8192,)
+    vq.codebook_hit_6 (8192,)
+    vq.codebook_hit_7 (8192,)
+    vq.codebook_hit_8 (8192,)
+    vq.codebook_hit_9 (8192,)
+    vq.codebook_hit_10 (8192,)
+    vq.codebook_hit_11 (8192,)
+    vq.embeddings.0.weight (8192, 384)
+    vq.embeddings.1.weight (8192, 384)
+    vq.embeddings.2.weight (8192, 384)
+    vq.embeddings.3.weight (8192, 384)
+    vq.embeddings.4.weight (8192, 384)
+    vq.embeddings.5.weight (8192, 384)
+    vq.embeddings.6.weight (8192, 384)
+    vq.embeddings.7.weight (8192, 384)
+    vq.embeddings.8.weight (8192, 384)
+    vq.embeddings.9.weight (8192, 384)
+    vq.embeddings.10.weight (8192, 384)
+    vq.embeddings.11.weight (8192, 384)
+    vq.quant_resi.0.weight (384, 384, 3)
+    vq.quant_resi.0.bias (384,)
+    vq.quant_resi.1.weight (384, 384, 3)
+    vq.quant_resi.1.bias (384,)
+    vq.quant_resi.2.weight (384, 384, 3)
+    vq.quant_resi.2.bias (384,)
+    vq.quant_resi.3.weight (384, 384, 3)
+    vq.quant_resi.3.bias (384,)
+    vq.quant_resi.4.weight (384, 384, 3)
+    vq.quant_resi.4.bias (384,)
+    vq.quant_resi.5.weight (384, 384, 3)
+    vq.quant_resi.5.bias (384,)
+    vq.quant_resi.6.weight (384, 384, 3)
+    vq.quant_resi.6.bias (384,)
+    vq.quant_resi.7.weight (384, 384, 3)
+    vq.quant_resi.7.bias (384,)
+    vq.quant_resi.8.weight (384, 384, 3)
+    vq.quant_resi.8.bias (384,)
+    vq.quant_resi.9.weight (384, 384, 3)
+    vq.quant_resi.9.bias (384,)
+    vq.quant_resi.10.weight (384, 384, 3)
+    vq.quant_resi.10.bias (384,)
+    vq.quant_resi.11.weight (384, 384, 3)
+    vq.quant_resi.11.bias (384,)
+    decoder.wpe.weight (128, 384)
+    decoder.ln_f.weight (384,)
+    decoder.middle_block.ln_1.weight (384,)
+    decoder.middle_block.ln_1.bias (384,)
+    decoder.middle_block.attn.c_attn.weight (1152, 384)
+    decoder.middle_block.attn.c_attn.bias (1152,)
+    decoder.middle_block.attn.c_proj.weight (384, 384)
+    decoder.middle_block.attn.c_proj.bias (384,)
+    decoder.middle_block.attn.q_norm.weight (64,)
+    decoder.middle_block.attn.k_norm.weight (64,)
+    decoder.middle_block.ln_2.weight (384,)
+    decoder.middle_block.ln_2.bias (384,)
+    decoder.middle_block.mlp.c_fc.weight (1536, 384)
+    decoder.middle_block.mlp.c_fc.bias (1536,)
+    decoder.middle_block.mlp.c_proj.weight (384, 1536)
+    decoder.middle_block.mlp.c_proj.bias (384,)
+    decoder.extra_blocks.0.ln_1.weight (384,)
+    decoder.extra_blocks.0.ln_1.bias (384,)
+    decoder.extra_blocks.0.attn.c_attn.weight (1152, 384)
+    decoder.extra_blocks.0.attn.c_attn.bias (1152,)
+    decoder.extra_blocks.0.attn.c_proj.weight (384, 384)
+    decoder.extra_blocks.0.attn.c_proj.bias (384,)
+    decoder.extra_blocks.0.attn.q_norm.weight (64,)
+    decoder.extra_blocks.0.attn.k_norm.weight (64,)
+    decoder.extra_blocks.0.ln_2.weight (384,)
+    decoder.extra_blocks.0.ln_2.bias (384,)
+    decoder.extra_blocks.0.mlp.c_fc.weight (1536, 384)
+    decoder.extra_blocks.0.mlp.c_fc.bias (1536,)
+    decoder.extra_blocks.0.mlp.c_proj.weight (384, 1536)
+    decoder.extra_blocks.0.mlp.c_proj.bias (384,)
+    decoder.extra_blocks.1.ln_1.weight (384,)
+    decoder.extra_blocks.1.ln_1.bias (384,)
+    decoder.extra_blocks.1.attn.c_attn.weight (1152, 384)
+    decoder.extra_blocks.1.attn.c_attn.bias (1152,)
+    decoder.extra_blocks.1.attn.c_proj.weight (384, 384)
+    decoder.extra_blocks.1.attn.c_proj.bias (384,)
+    decoder.extra_blocks.1.attn.q_norm.weight (64,)
+    decoder.extra_blocks.1.attn.k_norm.weight (64,)
+    decoder.extra_blocks.1.ln_2.weight (384,)
+    decoder.extra_blocks.1.ln_2.bias (384,)
+    decoder.extra_blocks.1.mlp.c_fc.weight (1536, 384)
+    decoder.extra_blocks.1.mlp.c_fc.bias (1536,)
+    decoder.extra_blocks.1.mlp.c_proj.weight (384, 1536)
+    decoder.extra_blocks.1.mlp.c_proj.bias (384,)
+    decoder.extra_blocks.2.ln_1.weight (384,)
+    decoder.extra_blocks.2.ln_1.bias (384,)
+    decoder.extra_blocks.2.attn.c_attn.weight (1152, 384)
+    decoder.extra_blocks.2.attn.c_attn.bias (1152,)
+    decoder.extra_blocks.2.attn.c_proj.weight (384, 384)
+    decoder.extra_blocks.2.attn.c_proj.bias (384,)
+    decoder.extra_blocks.2.attn.q_norm.weight (64,)
+    decoder.extra_blocks.2.attn.k_norm.weight (64,)
+    decoder.extra_blocks.2.ln_2.weight (384,)
+    decoder.extra_blocks.2.ln_2.bias (384,)
+    decoder.extra_blocks.2.mlp.c_fc.weight (1536, 384)
+    decoder.extra_blocks.2.mlp.c_fc.bias (1536,)
+    decoder.extra_blocks.2.mlp.c_proj.weight (384, 1536)
+    decoder.extra_blocks.2.mlp.c_proj.bias (384,)
+    decoder.output_layer.weight (30528, 384)
+
+-- 7. test dishes: TinyStories validation text
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+  stories: 27630 | file: /data/ncm/audit/TinyStoriesV2-GPT4-valid.txt
+  stories containing each name: {'Tim': 6259, 'Lily': 3719, 'Tom': 3377, 'Mom': 2139, 'Sue': 1954, 'Sam': 1664, 'Max': 1539, 'Ben': 1231, 'Lucy': 889, 'Mia': 868, 'Bob': 575, 'Anna': 469, 'Jack': 286}
+
+=== RECON DONE. Tell Claude: ncm2r ready ===

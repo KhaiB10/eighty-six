@@ -1,0 +1,45 @@
+=== NCM PHASE 2: PANTRY AUDIT Fri Nov 20 11:28:56 AM UTC 2026 ===
+VQVAE, Total parameter count: 36.43M
+VQVAE, Non embedding parameter count: 33.24M
+shelves (positions per level): [1, 8, 16, 24, 32, 40, 52, 64, 76, 92, 108, 128]  total 641 | jars per shelf: 4096 | dish length 128 tokens
+z_to_idx uses: ['_distances', '_sample_codes', 'embeddings']
+token ids that are exactly 'Lily': [413, 674] | 'Tim': [344, 655]
+{'name': 2000, 'bg': 4000, 'retain': 1000, 'ctrl': 400} | name split: score 1500 / held-out test 500 | 23s
+
+-- BASELINE (nothing pulled)  30s
+   Lily kept in rebuilt stories 100.0% | Lily slots rebuilt exactly 100.0%
+   rest-of-story accuracy 99.99% | other stories accuracy 99.99% | Tim kept 100.0%
+
+-- AUDIT: 6223 'Lily' positions in 1500 stories vs 4000 background stories
+   shelf slots | distinct jars under Lily | top-8 / top-32 / top-128 jars cover X% of Lily | those top-32 jars' share of ALL background use
+   L0     1 |  1025 |   1.9 /   5.9 /  16.0 % |   0.00 %
+   L1     8 |  1774 |   5.6 /  10.1 /  28.6 % |   0.36 %
+   L2    16 |  1871 |  10.0 /  20.4 /  38.9 % |   0.81 %
+   L3    24 |  1559 |  20.7 /  38.1 /  53.5 % |   0.98 %
+   L4    32 |  1102 |  41.0 /  60.5 /  73.0 % |   1.17 %
+   L5    40 |  1047 |  42.0 /  50.2 /  68.4 % |   0.86 %
+   L6    52 |  1168 |  30.7 /  42.1 /  62.4 % |   0.92 %
+   L7    64 |   316 |  66.5 /  81.4 /  96.3 % |   1.03 %
+   L8    76 |  1276 |  26.9 /  35.9 /  51.0 % |   0.88 %
+   L9    92 |  1398 |  23.1 /  33.0 /  47.7 % |   0.98 %
+   L10  108 |  1358 |  22.5 /  35.6 /  50.4 % |   1.00 %
+   L11  128 |    51 |  97.5 /  99.5 /  99.5 % |   1.31 %
+
+-- PULL JARS (masked jars can never be chosen; the encoder must use the next-closest jar)
+   arm                  | Lily GONE | rest-of-story acc | other stories acc | Tim kept | mask leaks | Lily became
+   coarse L0-3 top8     |    0.0%  |  99.99% (+0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:2031
+   coarse L0-3 top32    |    0.0%  |  99.98% (-0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:2031
+   coarse L0-3 top128   |    0.0%  |  99.98% (-0.01) |  99.99% (-0.00) | 100.0% | 0 | Lily:2031
+   middle L4-7 top8     |    0.0%  |  99.98% (-0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:2031
+   middle L4-7 top32    |    0.0%  |  99.99% (-0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2031
+   middle L4-7 top128   |    0.2%  |  99.99% (+0.00) |  99.99% (-0.00) | 100.0% | 0 | Lily:2026, Lucy:3, has:1, Rose:1
+   fine L8-11 top8      |    0.0%  |  99.98% (-0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:1979, Anna:15, Amy:8, Lola:6
+   fine L8-11 top32     |    0.0%  |  99.99% (-0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:1970, Anna:17, Lola:10, Rose:6
+   fine L8-11 top128    |    0.0%  |  99.95% (-0.04) |  99.94% (-0.05) | 100.0% | 0 | Lily:1954, Anna:21, Lola:10, Rose:8
+   all L0-11 top8       |   20.0%  |  99.99% (-0.00) |  99.99% (+0.00) | 100.0% | 0 | Lily:684, Lola:616, Anna:188, Amy:105
+   all L0-11 top32      |   40.0%  |  99.99% (+0.00) |  99.99% (-0.00) | 100.0% | 0 | Lola:709, Lily:398, Anna:229, Amy:153
+   all L0-11 top128     |   50.4%  |  99.95% (-0.04) |  99.94% (-0.06) | 100.0% | 0 | Lola:505, Lily:318, Anna:276, Amy:126
+
+wrote /data/lab/ncm2a/results.json | total 118s
+How to read: a WIN is an arm with high 'Lily GONE', near-zero accuracy drops, Tim still kept, 0 mask leaks.
+=== AUDIT DONE. Tell Claude: ncm2a ready ===
